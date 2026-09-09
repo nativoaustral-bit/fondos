@@ -3,8 +3,9 @@ import sys, os
 
 # Add project directory to sys.path
 project_dir = os.path.dirname(os.path.abspath(__file__))
-if project_dir not in sys.path:
-    sys.path.insert(0, project_dir)
+for d in [project_dir, '/home1/paulocis/public_html/FONDOS']:
+    if os.path.exists(d) and d not in sys.path:
+        sys.path.insert(0, d)
 
 # Set environment variables for Django
 os.environ['DJANGO_SETTINGS_MODULE'] = 'humm_fondos.settings'

@@ -11,7 +11,7 @@ class Command(BaseCommand):
         # 1. Configuración global
         config = ConfiguracionGlobal.get_solo()
         config.nombre_plataforma = 'Humm Financiamiento'
-        config.url_retorno_comunidad = 'https://comunidad.humm.cl/herramientas'
+        config.url_retorno_comunidad = 'https://comunidad.humm.cl'
         config.dias_revision_abierta = 7
         config.dias_revision_instrumento = 90
         config.save()
@@ -175,4 +175,7 @@ class Command(BaseCommand):
                 defaults={'etiqueta': etq, 'descripcion_auxiliar': desc, 'orden': ordn, 'activa': True}
             )
 
-        self.stdout.write(self.style.SUCCESS("✅ Cuestionario de 5 preguntas configurado exitosamente."))
+        self.stdout.write(self.style.SUCCESS("✅ Cuestionario v1 inicializado."))
+
+        from django.core.management import call_command
+        call_command('crear_formulario_v2')

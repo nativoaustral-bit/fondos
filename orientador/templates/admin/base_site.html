@@ -1,0 +1,76 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}Administración Humm Financiamiento{% endblock %}
+
+{% block branding %}
+<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 12px;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #245C50; color: #FFFFFF; border-radius: 6px; font-weight: bold; font-size: 18px;">H</span>
+    <h1 id="site-name" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #FFFFFF;">
+      <a href="/gestion/" style="color: #FFFFFF; text-decoration: none;">Humm Financiamiento</a>
+      <span style="font-size: 0.8rem; font-weight: 400; opacity: 0.85; margin-left: 8px;">(Motor Django)</span>
+    </h1>
+  </div>
+  <div>
+    <a href="/gestion/" style="display: inline-flex; align-items: center; gap: 6px; background: #245C50; color: #FFFFFF; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
+      &larr; Volver al Panel de Gestión Humm
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  :root {
+    --primary: #203B36;
+    --secondary: #245C50;
+    --accent: #E4EEE7;
+    --primary-fg: #FFFFFF;
+    --body-bg: #F7F8F4;
+    --body-fg: #203B36;
+    --header-bg: #203B36;
+    --header-color: #FFFFFF;
+    --breadcrumbs-bg: #245C50;
+    --breadcrumbs-fg: #E4EEE7;
+    --link-fg: #245C50;
+    --link-hover-color: #173B33;
+    --button-bg: #245C50;
+    --button-hover-bg: #1B453C;
+    --default-button-bg: #245C50;
+    --default-button-hover-bg: #1B453C;
+  }
+  #header {
+    background: #203B36 !important;
+    color: #FFFFFF !important;
+    padding: 12px 24px !important;
+  }
+  .breadcrumbs {
+    background: #245C50 !important;
+    color: #E4EEE7 !important;
+  }
+  .breadcrumbs a {
+    color: #FFFFFF !important;
+  }
+  div.breadcrumbs {
+    padding: 8px 24px !important;
+  }
+  .module h2, .module caption, .inline-group h2 {
+    background: #203B36 !important;
+    color: #FFFFFF !important;
+  }
+  .button, input[type=submit], input[type=button], .submit-row input, a.button {
+    background: #245C50 !important;
+    border-radius: 6px !important;
+    border: none !important;
+    color: #FFFFFF !important;
+  }
+  .button.default, input[type=submit].default, .submit-row input.default {
+    background: #203B36 !important;
+  }
+  a:link, a:visited {
+    color: #245C50;
+  }
+</style>
+{% endblock %}

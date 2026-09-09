@@ -25,7 +25,7 @@ class ConfiguracionGlobal(models.Model):
     )
     url_retorno_comunidad = models.URLField(
         max_length=500,
-        default='https://comunidad.humm.cl/herramientas',
+        default='https://comunidad.humm.cl',
         verbose_name='URL de retorno (botón volver)'
     )
     contacto_email = models.EmailField(

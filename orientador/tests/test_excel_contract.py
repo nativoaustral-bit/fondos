@@ -138,3 +138,59 @@ class ExcelContractTestCase(TestCase):
         revertir_lote_importacion(lote.lote_id, 'test_user')
         inst_restaurado = Instrumento.objects.get(instrumento_id='INS-TEST-001')
         self.assertEqual(inst_restaurado.nombre, 'Semilla Inicia Test')
+
+    def test_esquema_1_1_exporta_34_y_39_columnas(self):
+        """El esquema 1.1 exporta exactamente 34 columnas en Instrumentos y 39 en Convocatorias."""
+        buf = generar_excel_catalogo(incluir_datos=True)
+        wb = openpyxl.load_workbook(buf)
+
+        # Control
+        ws_ctrl = wb['Control']
+        self.assertEqual(ws_ctrl.cell(row=2, column=1).value, '1.1')
+
+        # Instrumentos: 34 columnas
+        ws_inst = wb['Instrumentos']
+        headers_inst = [cell.value for cell in ws_inst[1] if cell.value]
+        self.assertEqual(len(headers_inst), 34)
+        self.assertEqual(headers_inst[-2], 'objetivos')
+        self.assertEqual(headers_inst[-1], 'ventas_requeridas')
+
+        # Convocatorias: 39 columnas
+        ws_conv = wb['Convocatorias']
+        headers_conv = [cell.value for cell in ws_conv[1] if cell.value]
+        self.assertEqual(len(headers_conv), 39)
+        self.assertEqual(headers_conv[-2], 'objetivos')
+        self.assertEqual(headers_conv[-1], 'ventas_requeridas')
+
+        # Diccionario enriquecido
+        ws_dic = wb['Diccionario']
+        self.assertGreater(ws_dic.max_row, 15)
+
+    def test_importacion_retrocompatible_esquema_1_0(self):
+        """Un archivo en esquema 1.0 (sin columnas objetivos/ventas) se acepta y preserva datos existentes."""
+        self.instrumento.objetivos = 'iniciar_negocio;fortalecer_negocio'
+        self.instrumento.ventas_requeridas = 'si'
+        self.instrumento.save()
+
+        # Generar un archivo 1.0 simulado (sin las 2 últimas columnas)
+        buf = generar_excel_catalogo(incluir_datos=True)
+        wb = openpyxl.load_workbook(buf)
+        wb['Control'].cell(row=2, column=1, value='1.0')
+        # Eliminar las 2 últimas columnas de Instrumentos y Convocatorias
+        wb['Instrumentos'].delete_cols(33, 2)
+        wb['Convocatorias'].delete_cols(38, 2)
+
+        out_buf = io.BytesIO()
+        wb.save(out_buf)
+        content = out_buf.getvalue()
+
+        previa = validar_y_previsualizar_excel(content, 'test_v1_0.xlsx')
+        self.assertTrue(previa['valido'])
+        self.assertTrue(any('esquema 1.0' in adv.lower() for adv in previa['advertencias']))
+
+        # Aplicar
+        aplicar_actualizacion_excel(content, 'test_v1_0.xlsx', 'test_user')
+        inst = Instrumento.objects.get(instrumento_id='INS-TEST-001')
+        # No se borraron los objetivos ni ventas_requeridas existentes
+        self.assertEqual(inst.objetivos, 'iniciar_negocio;fortalecer_negocio')
+        self.assertEqual(inst.ventas_requeridas, 'si')

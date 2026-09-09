@@ -10,8 +10,13 @@ urlpatterns = [
     path('solicitar-apoyo/', public.solicitar_apoyo_view, name='solicitar_apoyo'),
 
     # Rutas administrativas Humm (Protegidas en servidor)
+    path('gestion/login/', admin_views.admin_login_view, name='admin_login'),
+    path('gestion/logout/', admin_views.admin_logout_view, name='admin_logout'),
     path('gestion/', admin_views.admin_dashboard_view, name='admin_dashboard'),
     path('gestion/catalogo/', admin_views.admin_catalogo_list_view, name='admin_catalogo'),
+    path('gestion/entidades/guardar/', admin_views.admin_entidad_guardar_view, name='admin_entidad_guardar'),
+    path('gestion/instrumentos/guardar-estado/', admin_views.admin_instrumento_guardar_estado_view, name='admin_instrumento_guardar_estado'),
+    path('gestion/convocatorias/guardar/', admin_views.admin_convocatoria_guardar_view, name='admin_convocatoria_guardar'),
     path('gestion/preguntas/', admin_views.admin_preguntas_editor_view, name='admin_preguntas'),
     path('gestion/importar-exportar/', admin_views.admin_import_export_view, name='admin_import_export'),
     path('gestion/descargar-plantilla/', admin_views.admin_descargar_plantilla_view, name='admin_plantilla'),

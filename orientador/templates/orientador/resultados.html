@@ -33,6 +33,25 @@
 
     {% else %}
 
+      <!-- Directriz Inicial Oficial -->
+      {% if directriz_inicial %}
+        <div class="humm-step-card" style="border-left: 4px solid var(--humm-action); margin-bottom: var(--humm-space-6); background: #FFFFFF;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--humm-space-2);">
+            <span class="humm-next-step-badge" style="background: var(--humm-selection-bg); color: var(--humm-action);">Directriz inicial</span>
+          </div>
+          <h2 style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin-bottom: var(--humm-space-2); line-height: 1.35;">
+            {{ directriz_inicial.titular }}
+          </h2>
+          <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary); margin-bottom: var(--humm-space-3);">
+            {{ directriz_inicial.consejo }}
+          </p>
+          <div style="background: var(--humm-bg-app); border-radius: var(--humm-radius-md); padding: var(--humm-space-3); font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary);">
+            <strong style="color: var(--humm-text-primary); display: block; margin-bottom: 2px;">Situación de tu negocio:</strong>
+            {{ directriz_inicial.matiz_tributario }}
+          </div>
+        </div>
+      {% endif %}
+
       <!-- 1. Opciones pertinentes para postular o preparar ahora -->
       <section aria-labelledby="sec-pertinentes">
         <h2 id="sec-pertinentes" style="font-size: var(--humm-font-size-lg); color: var(--humm-action); margin-bottom: var(--humm-space-4); display: flex; align-items: center; gap: 8px;">
@@ -115,6 +134,13 @@
         </a>
       </div>
 
+      {% if resumen_perfil.objetivo %}
+        <div class="humm-profile-item">
+          <span class="humm-profile-label">Objetivo principal:</span>
+          <p class="humm-profile-val" style="font-weight: 600; color: var(--humm-action);">{{ resumen_perfil.objetivo }}</p>
+        </div>
+      {% endif %}
+
       <div class="humm-profile-item">
         <span class="humm-profile-label">Necesidades elegidas:</span>
         <div class="humm-profile-val">
@@ -129,8 +155,8 @@
       </div>
 
       <div class="humm-profile-item">
-        <span class="humm-profile-label">Situación actual:</span>
-        <p class="humm-profile-val">{{ resumen_perfil.situacion }}</p>
+        <span class="humm-profile-label">Situación ante el SII:</span>
+        <p class="humm-profile-val">{{ resumen_perfil.estado_actividad|default:resumen_perfil.situacion }}</p>
       </div>
 
       <div class="humm-profile-item">
@@ -139,12 +165,7 @@
       </div>
 
       <div class="humm-profile-item">
-        <span class="humm-profile-label">Monto de referencia:</span>
-        <p class="humm-profile-val">{{ resumen_perfil.monto }}</p>
-      </div>
-
-      <div class="humm-profile-item">
-        <span class="humm-profile-label">Rubro:</span>
+        <span class="humm-profile-label">Rubro principal:</span>
         <p class="humm-profile-val">{{ resumen_perfil.rubro }}</p>
       </div>
 

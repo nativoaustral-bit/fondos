@@ -126,7 +126,7 @@
               <td><code>{{ item.convocatoria.convocatoria_id }}</code></td>
               <td><strong>{{ item.convocatoria.nombre }}</strong></td>
               <td>{{ item.convocatoria.instrumento.entidad.nombre }}</td>
-              <td>{{ item.convocatoria.get_effective_field:'cobertura' }}</td>
+              <td>{{ item.convocatoria.effective_cobertura }}</td>
               <td>{{ item.convocatoria.fecha_cierre|date:"d-m-Y"|default:"Permanente" }}</td>
               <td>
                 <span class="humm-status-badge {{ item.estado.clase_css }}">

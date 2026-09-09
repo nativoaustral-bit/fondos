@@ -17,6 +17,22 @@ class FormalizacionRequerida(models.TextChoices):
     POR_CONFIRMAR = 'por_confirmar', 'Por confirmar'
 
 
+class VentasRequeridas(models.TextChoices):
+    SI = 'si', 'Sí (exige tener ventas)'
+    NO = 'no', 'No (exige no tener ventas)'
+    INDIFERENTE = 'indiferente', 'Indiferente (con o sin ventas)'
+    POR_CONFIRMAR = 'por_confirmar', 'Por confirmar'
+
+
+class ObjetivoFinanciamiento(models.TextChoices):
+    INICIAR_NEGOCIO = 'iniciar_negocio', 'Iniciar y poner en marcha un negocio'
+    FORTALECER_NEGOCIO = 'fortalecer_negocio', 'Fortalecer o aumentar la capacidad de mi negocio'
+    VENDER_DIGITALIZAR = 'vender_digitalizar', 'Vender más, digitalizar o llegar a nuevos mercados'
+    DESARROLLAR_INNOVACION = 'desarrollar_innovacion', 'Desarrollar y probar una solución nueva o mejorada'
+    SOSTENIBILIDAD = 'sostenibilidad', 'Reducir el impacto ambiental de mi negocio'
+    PROYECTO_CULTURAL = 'proyecto_cultural', 'Crear o desarrollar un proyecto artístico o cultural'
+
+
 class TipoBeneficio(models.TextChoices):
     SUBSIDIO = 'subsidio', 'Subsidio'
     PREMIO = 'premio', 'Premio'
@@ -85,6 +101,17 @@ class Instrumento(models.Model):
     siguiente_paso = models.TextField(blank=True, default='', verbose_name='Siguiente paso sugerido')
 
     # Criterios de orientación (códigos separados por punto y coma, o 'todos')
+    objetivos = models.TextField(
+        blank=True,
+        default='',
+        help_text='Códigos de objetivos cubiertos separados por punto y coma (ej. iniciar_negocio;fortalecer_negocio) o vacío'
+    )
+    ventas_requeridas = models.CharField(
+        max_length=20,
+        choices=VentasRequeridas.choices,
+        default=VentasRequeridas.POR_CONFIRMAR,
+        verbose_name='Ventas requeridas'
+    )
     necesidades = models.TextField(
         default='todos',
         help_text='Códigos de necesidades cubiertas separados por punto y coma (ej. equipamiento;capital_trabajo) o "todos"'
@@ -201,6 +228,13 @@ class Instrumento(models.Model):
 
     def __str__(self):
         return f"{self.nombre} — {self.entidad.nombre} ({self.instrumento_id})"
+
+    def get_objetivos_list(self):
+        if not self.objetivos:
+            return []
+        if self.objetivos == 'todos':
+            return ['todos']
+        return [o.strip() for o in self.objetivos.split(';') if o.strip()]
 
     def get_necesidades_list(self):
         if not self.necesidades or self.necesidades == 'todos':

@@ -4,10 +4,12 @@ Generación de plantilla, exportador de catálogo, validación estricta,
 previsualización de diferencias (diffs) y aplicación atómica con reversión.
 """
 
+from __future__ import annotations
 import io
 import hashlib
 from datetime import datetime, date, time
 from decimal import Decimal
+from typing import Dict, Any, List, Optional, Union, Tuple
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -24,7 +26,8 @@ from ..models import (
     EstadoFuente, CierreModalidad
 )
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
+SCHEMA_VERSIONS_SOPORTADAS = ["1.0", "1.1"]
 
 COLUMNAS_CONTROL = ['schema_version', 'catalog_base_version', 'exported_at']
 
@@ -32,7 +35,7 @@ COLUMNAS_ENTIDADES = [
     'entidad_id', 'nombre', 'tipo', 'url_oficial', 'estado_editorial'
 ]
 
-COLUMNAS_INSTRUMENTOS = [
+COLUMNAS_INSTRUMENTOS_V1_0 = [
     'instrumento_id', 'entidad_id', 'nombre', 'estado_editorial',
     'resumen', 'dirigido_a', 'que_financia', 'que_no_financia',
     'requisitos_principales', 'siguiente_paso',
@@ -45,7 +48,10 @@ COLUMNAS_INSTRUMENTOS = [
     'cobertura_verificado_en', 'evidencia_verificacion'
 ]
 
-COLUMNAS_CONVOCATORIAS = [
+# Esquema 1.1 incorpora objetivos y ventas_requeridas (34 columnas)
+COLUMNAS_INSTRUMENTOS = COLUMNAS_INSTRUMENTOS_V1_0 + ['objetivos', 'ventas_requeridas']
+
+COLUMNAS_CONVOCATORIAS_V1_0 = [
     'convocatoria_id', 'instrumento_id', 'nombre', 'estado_editorial',
     'dirigido_a', 'que_financia', 'que_no_financia', 'requisitos_principales',
     'necesidades', 'situaciones', 'rubros', 'cobertura', 'regiones', 'comunas',
@@ -58,6 +64,9 @@ COLUMNAS_CONVOCATORIAS = [
     'requisitos_verificado_en', 'montos_verificado_en', 'cobertura_verificado_en',
     'fechas_verificado_en', 'estado_verificado_en', 'evidencia_verificacion'
 ]
+
+# Esquema 1.1 incorpora objetivos y ventas_requeridas (39 columnas)
+COLUMNAS_CONVOCATORIAS = COLUMNAS_CONVOCATORIAS_V1_0 + ['objetivos', 'ventas_requeridas']
 
 
 def format_iso_datetime(dt):
@@ -220,6 +229,8 @@ def generar_excel_catalogo(incluir_datos=True):
                 format_iso_datetime(inst.montos_verificado_en),
                 format_iso_datetime(inst.cobertura_verificado_en),
                 inst.evidencia_verificacion,
+                inst.objetivos,
+                inst.ventas_requeridas,
             ])
 
     # 4. Hoja Convocatorias
@@ -269,26 +280,46 @@ def generar_excel_catalogo(incluir_datos=True):
                 format_iso_datetime(conv.fechas_verificado_en),
                 format_iso_datetime(conv.estado_verificado_en),
                 conv.evidencia_verificacion,
+                conv.objetivos,
+                conv.ventas_requeridas,
             ])
 
-    # 5. Hoja Diccionario
+    # 5. Hoja Diccionario completa generada desde definiciones del sistema
     ws_dic = wb.create_sheet(title="Diccionario")
-    ws_dic.append(['Hoja', 'Campo / Columna', 'Tipo', 'Obligatorio', 'Valores permitidos / Convenciones', 'Descripción'])
+    ws_dic.append(['Hoja / Ámbito', 'Campo / Columna', 'Tipo', 'Obligatorio', 'Valores permitidos / Códigos válidos', 'Descripción / Regla'])
     for cell in ws_dic[1]:
         cell.font = header_font
         cell.fill = PatternFill(start_color="52665F", end_color="52665F", fill_type="solid")
 
     filas_diccionario = [
-        ('General', 'HEREDAR', 'Texto clave', 'Opcional en Convocatoria', 'HEREDAR', 'Toma automáticamente el valor definido en el instrumento padre.'),
-        ('General', '__BORRAR__', 'Texto clave', 'Opcional', '__BORRAR__', 'Elimina expresamente el valor de un campo opcional existente.'),
-        ('General', 'Celda vacía', '-', '-', '-', 'En actualización conserva el valor anterior. En registro nuevo deja dato desconocido.'),
-        ('Entidades', 'estado_editorial', 'Código', 'Sí', 'borrador, publicado, archivado', 'Solo publicado es visible al público.'),
-        ('Instrumentos', 'no_reembolsable_confirmado', 'Código', 'Sí', 'si, no, por_confirmar', 'Solo "si" puede publicarse en el catálogo del MVP.'),
-        ('Instrumentos', 'cobertura', 'Código', 'Sí', 'nacional, regional, comunal, por_confirmar', 'Alcance territorial del programa.'),
-        ('Instrumentos', 'formalizacion_requerida', 'Código', 'Sí', 'cualquiera, formalizacion_declarada, sin_inicio_primera, con_inicio_primera, por_confirmar', 'Condición tributaria requerida.'),
-        ('Convocatorias', 'estado_fuente', 'Código', 'Sí', 'anunciada, abierta, cerrada, suspendida, cancelada, por_confirmar', 'Estado observado en la fuente oficial.'),
+        # Convenciones transversales
+        ('General', 'HEREDAR', 'Texto clave', 'Opcional en Convocatoria', 'HEREDAR', 'Hereda el valor del instrumento padre (autorizado en campos descriptivos, objetivos, ventas_requeridas, necesidades, rubros, cobertura, regiones, formalización y modalidad).'),
+        ('General', '__BORRAR__', 'Texto clave', 'Opcional', '__BORRAR__', 'Elimina expresamente el valor de un campo opcional existente en la base.'),
+        ('General', 'Celda vacía', '-', '-', '-', 'En actualización conserva el valor anterior en la base. En registro nuevo deja el dato como desconocido / pendiente.'),
+        ('General', 'todos', 'Texto clave', 'Opcional', 'todos', 'Expresa ausencia comprobada de restricción sectorial, regional o de necesidades. No usar como sustituto de datos sin revisar.'),
+        ('General', 'cualquiera', 'Texto clave', 'Opcional', 'cualquiera', 'Aplica únicamente a formalizacion_requerida para indicar que el fondo admite personas con o sin formalización.'),
+        # Entidades
+        ('Entidades', 'tipo', 'Código', 'Sí', 'publica, privada, mixta, academia, sociedad_civil', 'Tipo de institución administradora.'),
+        ('Entidades', 'estado_editorial', 'Código', 'Sí', 'borrador, publicado, archivado', 'Solo publicado es visible en el orientador público.'),
+        # Criterios Formulario v2
+        ('Instrumentos / Convocatorias', 'objetivos', 'Lista códigos (;)', 'Recomendado', 'iniciar_negocio; fortalecer_negocio; vender_digitalizar; desarrollar_innovacion; sostenibilidad; proyecto_cultural', 'Objetivos cubiertos. Admite selección múltiple separada por ";". En convocatorias admite HEREDAR.'),
+        ('Instrumentos / Convocatorias', 'ventas_requeridas', 'Código', 'Sí', 'si, no, indiferente, por_confirmar, HEREDAR', 'si: exige ventas; no: prohíbe ventas; indiferente: admite ambas; por_confirmar: pendiente de verificar bases.'),
+        ('Instrumentos / Convocatorias', 'necesidades', 'Lista códigos (;)', 'Sí', 'equipamiento; capital_trabajo; ventas_digital; prototipo; infraestructura; asistencia_tecnica; produccion_cultural; todos', 'Gastos financiables admitidos por las bases. Separar por ";" si cubre múltiples.'),
+        ('Instrumentos / Convocatorias', 'situaciones', 'Lista códigos (;)', 'Histórico', 'idea; prototipo; ventas_informales; ventas_formales; todos', 'Campo histórico de madurez. En formulario v2 se evalúa formalizacion_requerida + ventas_requeridas.'),
+        ('Instrumentos / Convocatorias', 'formalizacion_requerida', 'Código', 'Sí', 'sin_inicio_primera, con_inicio_primera, formalizacion_declarada, cualquiera, por_confirmar', 'Condición tributaria requerida ante el SII.'),
+        ('Instrumentos / Convocatorias', 'rubros', 'Lista códigos (;)', 'Sí', 'alimentos; comercio; servicios; turismo; agropecuario; pesca; cultura; tecnologia; otro; todos', 'Sectores productivos elegibles. "todos" significa que no hay restricción sectorial.'),
+        ('Instrumentos / Convocatorias', 'cobertura', 'Código', 'Sí', 'nacional, regional, comunal, por_confirmar', 'Alcance geográfico.'),
+        ('Instrumentos / Convocatorias', 'regiones', 'Lista códigos (;)', 'Sí', 'CL-AP; CL-TA; CL-AN; CL-AT; CL-CO; CL-VA; CL-RM; CL-OH; CL-ML; CL-NB; CL-BI; CL-AR; CL-LR; CL-LL; CL-AI; CL-MA; todos', 'Regiones chilenas según norma ISO 3166-2:CL.'),
+        # Beneficios y montos
+        ('Instrumentos / Convocatorias', 'tipo_beneficio', 'Código', 'Sí', 'subsidio, premio, bonificacion, voucher, en_especie, beca', 'Naturaleza del beneficio.'),
+        ('Instrumentos', 'no_reembolsable_confirmado', 'Código', 'Sí', 'si, no, por_confirmar', 'Solo "si" califica para ser publicado en Humm Financiamiento.'),
+        ('Instrumentos / Convocatorias', 'modalidad_entrega', 'Código', 'Sí', 'anticipo, contra_gastos, en_especie, mixta, por_confirmar', 'Forma de entrega del subsidio.'),
+        ('Instrumentos / Convocatorias', 'moneda', 'Código', 'Sí', 'CLP, UF, UTM', 'Moneda en la que se fijan los montos.'),
+        ('Instrumentos / Convocatorias', 'aporte_base', 'Código', 'Sí', 'subsidio, costo_total, por_confirmar', 'Base sobre la que se calcula el porcentaje de aporte propio.'),
+        # Estados y fechas
+        ('Convocatorias', 'estado_fuente', 'Código', 'Sí', 'anunciada, abierta, cerrada, suspendida, cancelada, por_confirmar', 'Estado observado en la fuente oficial al momento de la revisión.'),
         ('Convocatorias', 'cierre_modalidad', 'Código', 'Sí', 'fecha_definida, permanente, hasta_agotar, sin_confirmar', 'Modalidad de cierre del llamado.'),
-        ('Fechas', '*_verificado_en', 'Fecha ISO', 'Opcional', 'YYYY-MM-DDTHH:MM:SSZ o YYYY-MM-DD', 'Fecha real de comprobación del grupo de datos.'),
+        ('Fechas', '*_verificado_en', 'Fecha ISO', 'Opcional', 'YYYY-MM-DDTHH:MM:SS o YYYY-MM-DD', 'Fecha de verificación técnica de cada bloque de datos.'),
     ]
     for r in filas_diccionario:
         ws_dic.append(list(r))
@@ -346,8 +377,10 @@ def validar_y_previsualizar_excel(file_content: bytes, filename: str) -> Dict[st
             control_data[k] = v
 
     schema_ver = str(control_data.get('schema_version', '')).strip()
-    if schema_ver != SCHEMA_VERSION:
-        advertencias.append(f"Versión de esquema del archivo ({schema_ver}) difiere de la esperada ({SCHEMA_VERSION}).")
+    if schema_ver not in SCHEMA_VERSIONS_SOPORTADAS:
+        errores.append(f"Versión de esquema '{schema_ver}' no soportada. Se admiten versiones {', '.join(SCHEMA_VERSIONS_SOPORTADAS)}.")
+    elif schema_ver == "1.0":
+        advertencias.append("Archivo en esquema 1.0 detectado. Se procesará preservando los campos nuevos del esquema 1.1.")
 
     config = ConfiguracionGlobal.get_solo()
     base_ver_archivo = control_data.get('catalog_base_version')
@@ -483,6 +516,8 @@ def validar_y_previsualizar_excel(file_content: bytes, filename: str) -> Dict[st
                     ('monto_max', parse_decimal(row_dict.get('monto_max'))),
                     ('moneda', row_dict.get('moneda')),
                     ('aporte_pct', parse_decimal(row_dict.get('aporte_pct'))),
+                    ('objetivos', row_dict.get('objetivos')),
+                    ('ventas_requeridas', row_dict.get('ventas_requeridas')),
                 ]
                 for campo, valor_prop in campos_a_revisar:
                     if valor_prop is not None and valor_prop != '':
@@ -558,6 +593,8 @@ def validar_y_previsualizar_excel(file_content: bytes, filename: str) -> Dict[st
                     ('monto_max', parse_decimal(row_dict.get('monto_max'))),
                     ('moneda', row_dict.get('moneda')),
                     ('url_convocatoria', row_dict.get('url_convocatoria')),
+                    ('objetivos', row_dict.get('objetivos')),
+                    ('ventas_requeridas', row_dict.get('ventas_requeridas')),
                 ]
                 for campo, valor_prop in campos_conv:
                     if valor_prop is not None and valor_prop != '':
@@ -697,10 +734,10 @@ def aplicar_actualizacion_excel(file_content: bytes, filename: str, usuario: str
                 setattr(inst, fld, str(val).strip())
 
         # Criterios
-        for fld in ['necesidades', 'situaciones', 'rubros', 'cobertura', 'regiones', 'comunas', 'formalizacion_requerida']:
+        for fld in ['necesidades', 'situaciones', 'rubros', 'cobertura', 'regiones', 'comunas', 'formalizacion_requerida', 'objetivos', 'ventas_requeridas']:
             val = rd.get(fld)
             if val == '__BORRAR__':
-                setattr(inst, fld, 'todos' if fld in ['necesidades', 'situaciones', 'rubros', 'regiones'] else '')
+                setattr(inst, fld, 'todos' if fld in ['necesidades', 'situaciones', 'rubros', 'regiones'] else ('por_confirmar' if fld in ['formalizacion_requerida', 'ventas_requeridas'] else ''))
             elif val is not None and val != '':
                 setattr(inst, fld, str(val).strip())
 
@@ -769,6 +806,7 @@ def aplicar_actualizacion_excel(file_content: bytes, filename: str, usuario: str
 
         # Campos que admiten HEREDAR
         for fld in ['dirigido_a', 'que_financia', 'que_no_financia', 'requisitos_principales',
+                    'objetivos', 'ventas_requeridas',
                     'necesidades', 'situaciones', 'rubros', 'cobertura', 'regiones', 'comunas',
                     'formalizacion_requerida', 'modalidad_entrega']:
             val = rd.get(fld)

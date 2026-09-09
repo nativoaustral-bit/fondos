@@ -65,6 +65,15 @@ class Convocatoria(models.Model):
     )
 
     # Criterios específicos de esta convocatoria
+    objetivos = models.TextField(
+        default='HEREDAR',
+        help_text='Códigos separados por punto y coma, "todos" o "HEREDAR"'
+    )
+    ventas_requeridas = models.CharField(
+        max_length=20,
+        default='HEREDAR',
+        help_text='si, no, indiferente, por_confirmar o HEREDAR'
+    )
     necesidades = models.TextField(
         default='HEREDAR',
         help_text='Códigos separados por punto y coma, "todos" o "HEREDAR"'
@@ -197,6 +206,20 @@ class Convocatoria(models.Model):
             return getattr(self.instrumento, field_name)
         return val
 
+    def get_effective_objetivos(self):
+        val = self.objetivos
+        if val == 'HEREDAR' or not val:
+            return self.instrumento.get_objetivos_list()
+        if val == 'todos':
+            return ['todos']
+        return [o.strip() for o in self.objetivos.split(';') if o.strip()]
+
+    def get_effective_ventas_requeridas(self):
+        val = self.ventas_requeridas
+        if val == 'HEREDAR' or not val:
+            return self.instrumento.ventas_requeridas
+        return val
+
     def get_effective_necesidades(self):
         val = self.necesidades
         if val == 'HEREDAR' or not val:
@@ -233,6 +256,13 @@ class Convocatoria(models.Model):
         val = self.formalizacion_requerida
         if val == 'HEREDAR' or not val:
             return self.instrumento.formalizacion_requerida
+        return val
+
+    @property
+    def effective_cobertura(self):
+        val = self.cobertura
+        if val == 'HEREDAR' or not val:
+            return self.instrumento.get_cobertura_display() if hasattr(self.instrumento, 'get_cobertura_display') else self.instrumento.cobertura
         return val
 
     def get_effective_monto_min(self):

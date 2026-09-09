@@ -1,6 +1,7 @@
 from .entidad import Entidad, EstadoEditorial, TipoEntidad
 from .instrumento import (
     Instrumento, CoberturaTerritorial, FormalizacionRequerida,
+    VentasRequeridas, ObjetivoFinanciamiento,
     TipoBeneficio, NoReembolsableConfirmado, ModalidadEntrega, Moneda, AporteBase
 )
 from .convocatoria import Convocatoria, EstadoFuente, CierreModalidad
@@ -18,6 +19,8 @@ __all__ = [
     'Instrumento',
     'CoberturaTerritorial',
     'FormalizacionRequerida',
+    'VentasRequeridas',
+    'ObjetivoFinanciamiento',
     'TipoBeneficio',
     'NoReembolsableConfirmado',
     'ModalidadEntrega',

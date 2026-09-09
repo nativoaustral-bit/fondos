@@ -563,3 +563,14 @@ dialog.humm-dialog::backdrop {
   color: var(--humm-text-muted);
   background-color: var(--humm-surface);
 }
+
+.humm-footer a {
+  color: var(--humm-action);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.humm-footer a:hover {
+  color: var(--humm-action-hover);
+}
+

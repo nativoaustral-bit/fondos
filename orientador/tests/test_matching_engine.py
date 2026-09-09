@@ -148,3 +148,100 @@ class MatchingEngineTestCase(TestCase):
         res = evaluar_perfil_financiamiento(respuestas)
         self.assertFalse(res['estado_vacio'])
         self.assertGreater(len(res['pertinentes']), 0)
+
+    def test_empresa_formalizada_sin_ventas_puede_completar(self):
+        """Una empresa formalizada sin ventas ('con_primera_sin_ventas') puede completar y recibir orientación."""
+        respuestas = {
+            'objetivo_financiamiento': 'iniciar_negocio',
+            'necesidades': ['equipamiento'],
+            'estado_actividad': 'con_primera_sin_ventas',
+            'region': 'CL-RM',
+            'rubro': 'servicios'
+        }
+        res = evaluar_perfil_financiamiento(respuestas)
+        self.assertIn('directriz_inicial', res)
+        self.assertTrue(len(res['directriz_inicial']['titular']) > 0)
+        # Fondo exclusivo sin inicio de actividades queda excluido
+        ids_pertinentes = [p['instrumento'].instrumento_id for p in res['pertinentes']]
+        self.assertNotIn('INS-SEMILLA', ids_pertinentes)
+
+    def test_directriz_inicial_sostenibilidad(self):
+        """Objetivo 'sostenibilidad' genera directriz enfocada en impacto ambiental y ahorro medible."""
+        respuestas = {
+            'objetivo_financiamiento': 'sostenibilidad',
+            'necesidades': ['equipamiento'],
+            'estado_actividad': 'con_primera_con_ventas',
+            'region': 'CL-LL',
+            'rubro': 'alimentos'
+        }
+        res = evaluar_perfil_financiamiento(respuestas)
+        self.assertIn('directriz_inicial', res)
+        self.assertIn('impacto ambiental', res['directriz_inicial']['titular'].lower())
+
+    def test_proyecto_cultural_excluye_fondos_no_culturales_estrictos(self):
+        """Un proyecto cultural no califica para fondos sectoriales agrícolas o exclusivos."""
+        fondo_agro = Instrumento.objects.create(
+            instrumento_id='INS-AGRO-TEST',
+            entidad=self.entidad,
+            nombre='Fondo Exclusivo Agro',
+            estado_editorial=EstadoEditorial.PUBLICADO,
+            no_reembolsable_confirmado=NoReembolsableConfirmado.SI,
+            formalizacion_requerida=FormalizacionRequerida.CUALQUIERA,
+            necesidades='equipamiento',
+            rubros='agropecuario',
+            objetivos='desarrollar_innovacion',
+            cobertura=CoberturaTerritorial.NACIONAL,
+            regiones='todos'
+        )
+        respuestas = {
+            'objetivo_financiamiento': 'proyecto_cultural',
+            'necesidades': ['produccion_cultural'],
+            'estado_actividad': 'sin_primera_sin_ventas',
+            'region': 'CL-RM',
+            'rubro': 'cultura'
+        }
+        res = evaluar_perfil_financiamiento(respuestas)
+        ids_pertinentes = [p['instrumento'].instrumento_id for p in res['pertinentes']]
+        self.assertNotIn('INS-AGRO-TEST', ids_pertinentes)
+
+    def test_convocatoria_comunal_territorial_estricta(self):
+        """Convocatoria comunal/regional (ej. Cisnes CL-AI) no se ofrece a usuarios de otra región."""
+        conv_cisnes = Convocatoria.objects.create(
+            convocatoria_id='CONV-TEST-CISNES',
+            instrumento=self.fondo_crece,
+            nombre='Turismo Cisnes Litoral Test',
+            estado_editorial=EstadoEditorial.PUBLICADO,
+            cobertura=CoberturaTerritorial.COMUNAL,
+            regiones='CL-AI',
+            comunas='Cisnes',
+            rubros='turismo'
+        )
+        # Usuario de Santiago (CL-RM)
+        res_rm = evaluar_perfil_financiamiento({
+            'objetivo_financiamiento': 'fortalecer_negocio',
+            'necesidades': ['equipamiento'],
+            'estado_actividad': 'con_primera_con_ventas',
+            'region': 'CL-RM',
+            'rubro': 'turismo'
+        })
+        todas_conv_rm = []
+        for p in res_rm['pertinentes'] + res_rm['proxima_etapa']:
+            if p.get('convocatoria_principal'):
+                todas_conv_rm.append(p['convocatoria_principal']['convocatoria_id'])
+
+        self.assertNotIn('CONV-TEST-CISNES', todas_conv_rm)
+
+        # Usuario de Aysén (CL-AI)
+        res_ai = evaluar_perfil_financiamiento({
+            'objetivo_financiamiento': 'fortalecer_negocio',
+            'necesidades': ['equipamiento'],
+            'estado_actividad': 'con_primera_con_ventas',
+            'region': 'CL-AI',
+            'rubro': 'turismo'
+        })
+        todas_conv_ai = []
+        for p in res_ai['pertinentes'] + res_ai['proxima_etapa']:
+            if p.get('convocatoria_principal'):
+                todas_conv_ai.append(p['convocatoria_principal']['convocatoria_id'])
+
+        self.assertIn('CONV-TEST-CISNES', todas_conv_ai)

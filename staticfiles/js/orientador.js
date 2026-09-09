@@ -34,7 +34,7 @@ function initOptionLabels() {
   });
 }
 
-// 2. Control estricto de límite para necesidades (máximo 2)
+// 2. Control estricto de límite para necesidades (máximo 2) y opción exclusiva 'por_definir'
 function initCheckboxLimits() {
   const containers = document.querySelectorAll('[data-limit-select]');
   containers.forEach(container => {
@@ -44,6 +44,24 @@ function initCheckboxLimits() {
 
     checkboxes.forEach(cb => {
       cb.addEventListener('change', (e) => {
+        // Manejo de opción exclusiva 'por_definir' (Aún no tengo definida la inversión)
+        if (cb.value === 'por_definir' && cb.checked) {
+          checkboxes.forEach(other => {
+            if (other !== cb && other.checked) {
+              other.checked = false;
+              const lbl = other.closest('.humm-option-label');
+              if (lbl) lbl.classList.remove('is-selected');
+            }
+          });
+        } else if (cb.checked && cb.value !== 'por_definir') {
+          const porDefinirCb = container.querySelector('input[type="checkbox"][value="por_definir"]');
+          if (porDefinirCb && porDefinirCb.checked) {
+            porDefinirCb.checked = false;
+            const lbl = porDefinirCb.closest('.humm-option-label');
+            if (lbl) lbl.classList.remove('is-selected');
+          }
+        }
+
         const checkedCount = container.querySelectorAll('input[type="checkbox"]:checked').length;
         if (checkedCount > limit) {
           cb.checked = false;

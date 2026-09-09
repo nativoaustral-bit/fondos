@@ -11,6 +11,8 @@ class TipoEntidad(models.TextChoices):
     PUBLICA = 'publica', 'Pública'
     PRIVADA = 'privada', 'Privada'
     MIXTA = 'mixta', 'Mixta'
+    SOCIEDAD_CIVIL = 'sociedad_civil', 'Sociedad Civil / Fundación'
+    ACADEMIA = 'academia', 'Academia / Centro de I+D'
     REGIONAL = 'regional', 'Regional / Subnacional'
     OTRA = 'otra', 'Otra'
 

@@ -37,10 +37,22 @@
       <a href="{% url 'orientador:admin_configuracion' %}" class="humm-admin-tab {% if request.resolver_match.url_name == 'admin_configuracion' %}is-active{% endif %}">
         Configuración
       </a>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: var(--humm-space-3);">
+        <a href="{% url 'orientador:formulario' %}" class="humm-btn-secondary" style="font-size: var(--humm-font-size-xs); padding: 4px 10px; min-height: 32px; text-decoration: none;">
+          Ver Orientador Público &rarr;
+        </a>
+        <a href="{% url 'orientador:admin_logout' %}" style="font-size: var(--humm-font-size-xs); color: var(--humm-danger-text); text-decoration: none; font-weight: 600;">
+          Cerrar sesión
+        </a>
+      </div>
     </div>
   </nav>
 
   {% block admin_content %}{% endblock %}
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+  {% block admin_extra_js %}{% endblock %}
 {% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar Sesión Administrativa — {{ humm_config.nombre_plataforma|default:"Humm Financiamiento" }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 440px; margin: var(--humm-space-6) auto; width: 100%;">
+
+  <div class="humm-step-card" style="padding: var(--humm-space-6);">
+    <div style="text-align: center; margin-bottom: var(--humm-space-5);">
+      <span class="humm-brand-logo" style="width: 48px; height: 48px; font-size: 1.5rem; margin: 0 auto var(--humm-space-2) auto;">H</span>
+      <h1 style="font-size: var(--humm-font-size-xl); color: var(--humm-text-primary); font-weight: 700;">Acceso Administrativo</h1>
+      <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary); margin-top: 4px;">
+        Panel de Gestión y Catálogo de {{ humm_config.nombre_plataforma|default:"Humm Financiamiento" }}
+      </p>
+    </div>
+
+    {% if error %}
+      <div class="humm-alert-box estado-cerrada" style="margin-bottom: var(--humm-space-4);" role="alert">
+        {{ error }}
+      </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'orientador:admin_login' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url|default:'/gestion/' }}">
+
+      <div style="margin-bottom: var(--humm-space-4);">
+        <label for="id_username" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px; color: var(--humm-text-primary);">
+          Usuario
+        </label>
+        <input type="text" id="id_username" name="username" class="humm-select" required autofocus placeholder="admin">
+      </div>
+
+      <div style="margin-bottom: var(--humm-space-5);">
+        <label for="id_password" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px; color: var(--humm-text-primary);">
+          Contraseña
+        </label>
+        <input type="password" id="id_password" name="password" class="humm-select" required placeholder="••••••••">
+      </div>
+
+      <button type="submit" class="humm-btn-primary" style="width: 100%;">
+        Ingresar al Panel de Gestión
+      </button>
+    </form>
+
+    <div style="margin-top: var(--humm-space-5); text-align: center; border-top: 1px solid var(--humm-border); padding-top: var(--humm-space-3);">
+      <a href="{% url 'orientador:formulario' %}" style="font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary); text-decoration: none;">
+        &larr; Volver al Orientador Público
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

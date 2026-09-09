@@ -11,27 +11,42 @@
 
     <!-- Pestañas de sección interna -->
     <div style="display: flex; gap: 8px;">
+      <a href="?seccion=entidades" class="humm-btn-secondary {% if seccion == 'entidades' %}is-selected{% endif %}" style="font-size: var(--humm-font-size-xs); {% if seccion == 'entidades' %}background: var(--humm-selection-bg);{% endif %}">
+        Entidades ({{ total_entidades }})
+      </a>
       <a href="?seccion=instrumentos" class="humm-btn-secondary {% if seccion == 'instrumentos' %}is-selected{% endif %}" style="font-size: var(--humm-font-size-xs); {% if seccion == 'instrumentos' %}background: var(--humm-selection-bg);{% endif %}">
-        Instrumentos ({{ instrumentos|length }})
+        Instrumentos ({{ total_instrumentos }})
       </a>
       <a href="?seccion=convocatorias" class="humm-btn-secondary {% if seccion == 'convocatorias' %}is-selected{% endif %}" style="font-size: var(--humm-font-size-xs); {% if seccion == 'convocatorias' %}background: var(--humm-selection-bg);{% endif %}">
-        Convocatorias ({{ convocatorias|length }})
-      </a>
-      <a href="?seccion=entidades" class="humm-btn-secondary {% if seccion == 'entidades' %}is-selected{% endif %}" style="font-size: var(--humm-font-size-xs); {% if seccion == 'entidades' %}background: var(--humm-selection-bg);{% endif %}">
-        Entidades ({{ entidades|length }})
+        Convocatorias ({{ total_convocatorias }})
       </a>
     </div>
   </div>
 
-  <!-- Buscador -->
-  <form method="GET" style="margin-bottom: var(--humm-space-5); display: flex; gap: var(--humm-space-2);">
-    <input type="hidden" name="seccion" value="{{ seccion }}">
-    <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o ID..." class="humm-select" style="max-width: 400px;">
-    <button type="submit" class="humm-btn-primary" style="width: auto; padding: 0 20px;">Buscar</button>
-    {% if query %}
-      <a href="?seccion={{ seccion }}" class="humm-btn-secondary" style="display: inline-flex; align-items: center;">Limpiar</a>
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--humm-space-3); margin-bottom: var(--humm-space-3);">
+    <!-- Buscador -->
+    <form method="GET" style="display: flex; gap: var(--humm-space-2); flex: 1; max-width: 450px;">
+      <input type="hidden" name="seccion" value="{{ seccion }}">
+      <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o ID..." class="humm-select">
+      <button type="submit" class="humm-btn-primary" style="width: auto; padding: 0 20px;">Buscar</button>
+      {% if query %}
+        <a href="?seccion={{ seccion }}" class="humm-btn-secondary" style="display: inline-flex; align-items: center;">Limpiar</a>
+      {% endif %}
+    </form>
+
+    {% if seccion == 'entidades' %}
+      <button type="button" class="humm-btn-primary" onclick="abrirModalNuevaEntidad()" style="width: auto; padding: 0 16px; font-size: var(--humm-font-size-xs); display: inline-flex; align-items: center; gap: 6px;">
+        <span aria-hidden="true" style="font-size: 1.1rem; line-height: 1;">+</span>
+        <span>Nueva Entidad</span>
+      </button>
     {% endif %}
-  </form>
+  </div>
+
+  {% if query %}
+    <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary); margin-bottom: var(--humm-space-4);">
+      Filtro de búsqueda: <strong>"{{ query }}"</strong> ({{ resultados_conteo }} encontrado{{ resultados_conteo|pluralize }}).
+    </p>
+  {% endif %}
 
   {% if seccion == 'entidades' %}
     <div class="humm-admin-table-wrap">
@@ -43,6 +58,7 @@
             <th>Tipo</th>
             <th>URL Oficial</th>
             <th>Estado Editorial</th>
+            <th style="text-align: center; width: 100px;">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -51,21 +67,116 @@
               <td><code>{{ ent.entidad_id }}</code></td>
               <td><strong>{{ ent.nombre }}</strong></td>
               <td>{{ ent.get_tipo_display }}</td>
-              <td><a href="{{ ent.url_oficial }}" target="_blank" rel="noopener">{{ ent.url_oficial|truncatechars:35 }}</a></td>
+              <td>
+                <a href="{{ ent.url_oficial }}" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 4px;">
+                  <span>{{ ent.url_oficial|truncatechars:35 }}</span>
+                  <span style="font-size: 0.75rem;">&#x2197;</span>
+                </a>
+              </td>
               <td>
                 <span class="humm-status-badge {% if ent.estado_editorial == 'publicado' %}estado-abierta{% else %}estado-anunciada{% endif %}">
                   {{ ent.get_estado_editorial_display }}
                 </span>
               </td>
+              <td style="text-align: center;">
+                <button type="button"
+                        class="humm-btn-secondary"
+                        style="font-size: var(--humm-font-size-xs); padding: 4px 10px; min-height: 28px;"
+                        onclick="abrirModalEditarEntidad('{{ ent.entidad_id }}', '{{ ent.nombre|escapejs }}', '{{ ent.tipo }}', '{{ ent.url_oficial|escapejs }}', '{{ ent.estado_editorial }}')">
+                  Editar
+                </button>
+              </td>
             </tr>
           {% empty %}
-            <tr><td colspan="5" style="text-align: center; padding: var(--humm-space-6);">No se encontraron entidades.</td></tr>
+            <tr><td colspan="6" style="text-align: center; padding: var(--humm-space-6);">No se encontraron entidades.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% elif seccion == 'instrumentos' %}
+    <!-- Instrumentos -->
+    <div class="humm-admin-table-wrap">
+      <table class="humm-admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Instrumento</th>
+            <th>Entidad</th>
+            <th>Estado Llamado</th>
+            <th>Fechas (Apertura / Cierre)</th>
+            <th>Monto Máximo</th>
+            <th>Estado Editorial</th>
+            <th style="text-align: center; width: 100px;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in instrumentos %}
+            <tr>
+              <td><code>{{ item.objeto.instrumento_id }}</code></td>
+              <td>
+                <strong>{{ item.objeto.nombre }}</strong>
+                {% if item.objeto.url_programa %}
+                  <a href="{{ item.objeto.url_programa }}" target="_blank" rel="noopener" style="font-size: 0.75rem; margin-left: 4px;">&#x2197;</a>
+                {% endif %}
+              </td>
+              <td>{{ item.objeto.entidad.nombre }}</td>
+              <td>
+                {% if item.estado_calc %}
+                  <span class="humm-status-badge {{ item.estado_calc.clase_css }}">
+                    {{ item.estado_calc.etiqueta }}
+                  </span>
+                {% else %}
+                  <span class="humm-status-badge estado-anunciada">
+                    Sin convocatoria activa
+                  </span>
+                {% endif %}
+              </td>
+              <td style="font-size: var(--humm-font-size-xs);">
+                {% if item.convocatoria_principal and item.convocatoria_principal.fecha_apertura or item.convocatoria_principal.fecha_cierre %}
+                  {{ item.convocatoria_principal.fecha_apertura|date:"d-m-Y"|default:"-" }} al {{ item.convocatoria_principal.fecha_cierre|date:"d-m-Y"|default:"-" }}
+                {% else %}
+                  <span style="color: var(--humm-text-muted);">No definidas</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if item.objeto.monto_max %}
+                  {{ item.objeto.monto_max|format_money:item.objeto.moneda }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                <span class="humm-status-badge {% if item.objeto.estado_editorial == 'publicado' %}estado-abierta{% else %}estado-anunciada{% endif %}">
+                  {{ item.objeto.get_estado_editorial_display }}
+                </span>
+              </td>
+              <td style="text-align: center;">
+                <button type="button"
+                        class="humm-btn-secondary"
+                        style="font-size: var(--humm-font-size-xs); padding: 4px 10px; min-height: 28px;"
+                        onclick="abrirModalEditarInstrumento(
+                          '{{ item.objeto.instrumento_id }}',
+                          '{{ item.objeto.nombre|escapejs }}',
+                          '{{ item.convocatoria_principal.estado_fuente|default:'abierta' }}',
+                          '{{ item.convocatoria_principal.fecha_apertura|date:'Y-m-d'|default:'' }}',
+                          '{{ item.convocatoria_principal.fecha_cierre|date:'Y-m-d'|default:'' }}',
+                          '{{ item.convocatoria_principal.cierre_modalidad|default:'fecha_definida' }}',
+                          '{{ item.objeto.estado_editorial }}'
+                        )">
+                  Editar
+                </button>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="8" style="text-align: center; padding: var(--humm-space-6);">No se encontraron instrumentos.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
 
   {% elif seccion == 'convocatorias' %}
+    <!-- Convocatorias -->
     <div class="humm-admin-table-wrap">
       <table class="humm-admin-table">
         <thead>
@@ -77,6 +188,7 @@
             <th>Cierre</th>
             <th>Estado Mostrado</th>
             <th>Estado Editorial</th>
+            <th style="text-align: center; width: 100px;">Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -105,63 +217,26 @@
                   {{ c.objeto.get_estado_editorial_display }}
                 </span>
               </td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="7" style="text-align: center; padding: var(--humm-space-6);">No se encontraron convocatorias.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-
-  {% else %}
-    <!-- Instrumentos -->
-    <div class="humm-admin-table-wrap">
-      <table class="humm-admin-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Instrumento</th>
-            <th>Entidad</th>
-            <th>Monto Máximo</th>
-            <th>Cobertura</th>
-            <th>Vigencia Datos</th>
-            <th>Estado Editorial</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in instrumentos %}
-            <tr>
-              <td><code>{{ item.objeto.instrumento_id }}</code></td>
-              <td>
-                <strong>{{ item.objeto.nombre }}</strong>
-                {% if item.objeto.url_programa %}
-                  <a href="{{ item.objeto.url_programa }}" target="_blank" rel="noopener" style="font-size: 0.75rem; margin-left: 4px;">&#x2197;</a>
-                {% endif %}
-              </td>
-              <td>{{ item.objeto.entidad.nombre }}</td>
-              <td>
-                {% if item.objeto.monto_max %}
-                  {{ item.objeto.monto_max|format_money:item.objeto.moneda }}
-                {% else %}
-                  -
-                {% endif %}
-              </td>
-              <td>{{ item.objeto.get_cobertura_display }}</td>
-              <td style="font-size: var(--humm-font-size-xs);">
-                {% if item.vigencia.desactualizado %}
-                  <span style="color: #9B1C1C;">⚠️ Desactualizado</span>
-                {% else %}
-                  <span style="color: #135738;">✓ Al día</span>
-                {% endif %}
-              </td>
-              <td>
-                <span class="humm-status-badge {% if item.objeto.estado_editorial == 'publicado' %}estado-abierta{% else %}estado-anunciada{% endif %}">
-                  {{ item.objeto.get_estado_editorial_display }}
-                </span>
+              <td style="text-align: center;">
+                <button type="button"
+                        class="humm-btn-secondary"
+                        style="font-size: var(--humm-font-size-xs); padding: 4px 10px; min-height: 28px;"
+                        onclick="abrirModalEditarConvocatoria(
+                          '{{ c.objeto.convocatoria_id }}',
+                          '{{ c.objeto.nombre|escapejs }}',
+                          '{{ c.objeto.instrumento.nombre|escapejs }}',
+                          '{{ c.objeto.estado_fuente }}',
+                          '{{ c.objeto.fecha_apertura|date:'Y-m-d'|default:'' }}',
+                          '{{ c.objeto.fecha_cierre|date:'Y-m-d'|default:'' }}',
+                          '{{ c.objeto.cierre_modalidad }}',
+                          '{{ c.objeto.estado_editorial }}'
+                        )">
+                  Editar
+                </button>
               </td>
             </tr>
           {% empty %}
-            <tr><td colspan="7" style="text-align: center; padding: var(--humm-space-6);">No se encontraron instrumentos.</td></tr>
+            <tr><td colspan="8" style="text-align: center; padding: var(--humm-space-6);">No se encontraron convocatorias.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -169,4 +244,367 @@
   {% endif %}
 
 </div>
+
+<!-- Modal Agregar / Editar Entidad -->
+<dialog id="modal-entidad" class="humm-dialog" aria-labelledby="modal-entidad-titulo">
+  <div class="humm-dialog-header">
+    <h2 id="modal-entidad-titulo" style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin: 0;">
+      Nueva Entidad
+    </h2>
+    <button type="button" class="humm-dialog-close" data-close-dialog aria-label="Cerrar modal">&times;</button>
+  </div>
+  <div class="humm-dialog-body">
+    <form method="POST" action="{% url 'orientador:admin_entidad_guardar' %}" id="form-entidad">
+      {% csrf_token %}
+      <input type="hidden" name="modo" id="entidad-modo" value="crear">
+
+      <!-- ID de la entidad -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="entidad-id" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Identificador ID <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <input type="text"
+               name="entidad_id"
+               id="entidad-id"
+               class="humm-select"
+               placeholder="Ej. {{ siguiente_entidad_id }}"
+               required
+               style="font-family: monospace;">
+        <p id="entidad-id-ayuda" style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); margin-top: 4px;">
+          Código único e inmutable (ej. {{ siguiente_entidad_id }}).
+        </p>
+      </div>
+
+      <!-- Nombre -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="entidad-nombre" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Nombre Oficial de la Entidad <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <input type="text"
+               name="nombre"
+               id="entidad-nombre"
+               class="humm-select"
+               placeholder="Ej. Sercotec, Corfo, FIA..."
+               required>
+      </div>
+
+      <!-- Tipo -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="entidad-tipo" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Tipo de Entidad <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <select name="tipo" id="entidad-tipo" class="humm-select" required>
+          {% for val, label in tipos_entidad %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- URL Oficial -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="entidad-url" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          URL Oficial <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <input type="url"
+               name="url_oficial"
+               id="entidad-url"
+               class="humm-select"
+               placeholder="https://www.ejemplo.cl"
+               required>
+        <p style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); margin-top: 4px;">
+          Enlace al portal oficial de la institución (debe comenzar con https://).
+        </p>
+      </div>
+
+      <!-- Estado Editorial -->
+      <div style="margin-bottom: var(--humm-space-4);">
+        <label for="entidad-estado" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Estado Editorial <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <select name="estado_editorial" id="entidad-estado" class="humm-select" required>
+          {% for val, label in estados_editorial %}
+            <option value="{{ val }}" {% if val == 'publicado' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Botones de acción -->
+      <div style="display: flex; justify-content: flex-end; gap: var(--humm-space-2); margin-top: var(--humm-space-5);">
+        <button type="button" class="humm-btn-secondary" data-close-dialog style="font-size: var(--humm-font-size-sm);">
+          Cancelar
+        </button>
+        <button type="submit" class="humm-btn-primary" id="btn-guardar-entidad" style="width: auto; font-size: var(--humm-font-size-sm);">
+          Guardar Entidad
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Modal Editar Estado y Fechas de Instrumento -->
+<dialog id="modal-instrumento" class="humm-dialog" aria-labelledby="modal-instrumento-titulo">
+  <div class="humm-dialog-header">
+    <h2 id="modal-instrumento-titulo" style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin: 0;">
+      Editar Estado y Fechas del Instrumento
+    </h2>
+    <button type="button" class="humm-dialog-close" data-close-dialog aria-label="Cerrar modal">&times;</button>
+  </div>
+  <div class="humm-dialog-body">
+    <form method="POST" action="{% url 'orientador:admin_instrumento_guardar_estado' %}" id="form-instrumento">
+      {% csrf_token %}
+      <input type="hidden" name="instrumento_id" id="inst-id">
+
+      <!-- Nombre del Instrumento informativo -->
+      <div style="margin-bottom: var(--humm-space-3); padding: var(--humm-space-3); background: var(--humm-selection-bg, #f1f5f9); border-radius: var(--humm-radius-md); border: 1px solid var(--humm-border);">
+        <span style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); display: block;">Instrumento seleccionado</span>
+        <strong id="inst-nombre-display" style="font-size: var(--humm-font-size-base); color: var(--humm-text-primary);"></strong>
+        <span id="inst-id-badge" style="font-family: monospace; font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary); margin-left: 6px;"></span>
+      </div>
+
+      <!-- Estado del llamado (Abierto / Cerrado) -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="inst-estado-llamado" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Estado del Llamado / Fondo <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <select name="estado_llamado" id="inst-estado-llamado" class="humm-select" required>
+          <option value="abierta">🟢 Abierta (Convocatoria activa para postular)</option>
+          <option value="cerrada">🔴 Cerrada (Plazo concluido o sin postulación)</option>
+          <option value="anunciada">🟡 Anunciada (Próxima apertura informada)</option>
+          <option value="suspendida">🟠 Suspendida temporalmente</option>
+          <option value="cancelada">⚫ Cancelada por la institución</option>
+        </select>
+      </div>
+
+      <!-- Fechas de apertura y cierre en 2 columnas -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--humm-space-3); margin-bottom: var(--humm-space-3);">
+        <div>
+          <label for="inst-fecha-apertura" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+            Fecha de Apertura
+          </label>
+          <input type="date" name="fecha_apertura" id="inst-fecha-apertura" class="humm-select">
+        </div>
+        <div>
+          <label for="inst-fecha-cierre" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+            Fecha de Cierre
+          </label>
+          <input type="date" name="fecha_cierre" id="inst-fecha-cierre" class="humm-select">
+        </div>
+      </div>
+
+      <!-- Modalidad de cierre -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="inst-cierre-modalidad" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Modalidad de Cierre
+        </label>
+        <select name="cierre_modalidad" id="inst-cierre-modalidad" class="humm-select">
+          {% for val, label in modalidades_cierre %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Estado editorial -->
+      <div style="margin-bottom: var(--humm-space-4);">
+        <label for="inst-estado-editorial" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Estado Editorial del Instrumento
+        </label>
+        <select name="estado_editorial" id="inst-estado-editorial" class="humm-select">
+          {% for val, label in estados_editorial %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Botones -->
+      <div style="display: flex; justify-content: flex-end; gap: var(--humm-space-2); margin-top: var(--humm-space-5);">
+        <button type="button" class="humm-btn-secondary" data-close-dialog style="font-size: var(--humm-font-size-sm);">
+          Cancelar
+        </button>
+        <button type="submit" class="humm-btn-primary" style="width: auto; font-size: var(--humm-font-size-sm);">
+          Guardar Estado y Fechas
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Modal Editar Convocatoria -->
+<dialog id="modal-convocatoria" class="humm-dialog" aria-labelledby="modal-convocatoria-titulo">
+  <div class="humm-dialog-header">
+    <h2 id="modal-convocatoria-titulo" style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin: 0;">
+      Editar Convocatoria
+    </h2>
+    <button type="button" class="humm-dialog-close" data-close-dialog aria-label="Cerrar modal">&times;</button>
+  </div>
+  <div class="humm-dialog-body">
+    <form method="POST" action="{% url 'orientador:admin_convocatoria_guardar' %}" id="form-convocatoria">
+      {% csrf_token %}
+      <input type="hidden" name="convocatoria_id" id="conv-id">
+
+      <!-- Convocatoria e Instrumento informativo -->
+      <div style="margin-bottom: var(--humm-space-3); padding: var(--humm-space-3); background: var(--humm-selection-bg, #f1f5f9); border-radius: var(--humm-radius-md); border: 1px solid var(--humm-border);">
+        <span style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); display: block;">Instrumento base</span>
+        <strong id="conv-inst-display" style="font-size: var(--humm-font-size-sm); color: var(--humm-text-primary);"></strong>
+      </div>
+
+      <!-- Nombre -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="conv-nombre" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Nombre de la Convocatoria <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <input type="text" name="nombre" id="conv-nombre" class="humm-select" required>
+      </div>
+
+      <!-- Estado del llamado (Abierto / Cerrado) -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="conv-estado-fuente" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Estado de la Convocatoria <span style="color: var(--humm-danger-text);">*</span>
+        </label>
+        <select name="estado_fuente" id="conv-estado-fuente" class="humm-select" required>
+          <option value="abierta">🟢 Abierta (En proceso de postulación)</option>
+          <option value="cerrada">🔴 Cerrada (Plazo concluido)</option>
+          <option value="anunciada">🟡 Anunciada (Próxima apertura)</option>
+          <option value="suspendida">🟠 Suspendida temporalmente</option>
+          <option value="cancelada">⚫ Cancelada formalmente</option>
+          <option value="por_confirmar">⚪ Por confirmar</option>
+        </select>
+      </div>
+
+      <!-- Fechas de apertura y cierre en 2 columnas -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--humm-space-3); margin-bottom: var(--humm-space-3);">
+        <div>
+          <label for="conv-fecha-apertura" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+            Fecha de Apertura
+          </label>
+          <input type="date" name="fecha_apertura" id="conv-fecha-apertura" class="humm-select">
+        </div>
+        <div>
+          <label for="conv-fecha-cierre" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+            Fecha de Cierre
+          </label>
+          <input type="date" name="fecha_cierre" id="conv-fecha-cierre" class="humm-select">
+        </div>
+      </div>
+
+      <!-- Modalidad de cierre -->
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="conv-cierre-modalidad" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Modalidad de Cierre
+        </label>
+        <select name="cierre_modalidad" id="conv-cierre-modalidad" class="humm-select">
+          {% for val, label in modalidades_cierre %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Estado Editorial -->
+      <div style="margin-bottom: var(--humm-space-4);">
+        <label for="conv-estado-editorial" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Estado Editorial
+        </label>
+        <select name="estado_editorial" id="conv-estado-editorial" class="humm-select">
+          {% for val, label in estados_editorial %}
+            <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Botones -->
+      <div style="display: flex; justify-content: flex-end; gap: var(--humm-space-2); margin-top: var(--humm-space-5);">
+        <button type="button" class="humm-btn-secondary" data-close-dialog style="font-size: var(--humm-font-size-sm);">
+          Cancelar
+        </button>
+        <button type="submit" class="humm-btn-primary" style="width: auto; font-size: var(--humm-font-size-sm);">
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+function abrirModalNuevaEntidad() {
+  const modal = document.getElementById('modal-entidad');
+  if (!modal) return;
+  document.getElementById('modal-entidad-titulo').textContent = 'Nueva Entidad';
+  document.getElementById('entidad-modo').value = 'crear';
+  
+  const idInput = document.getElementById('entidad-id');
+  idInput.value = '{{ siguiente_entidad_id }}';
+  idInput.readOnly = false;
+  idInput.style.backgroundColor = '';
+  document.getElementById('entidad-id-ayuda').textContent = 'Código único e inmutable (ej. {{ siguiente_entidad_id }}).';
+
+  document.getElementById('entidad-nombre').value = '';
+  document.getElementById('entidad-tipo').value = 'publica';
+  document.getElementById('entidad-url').value = '';
+  document.getElementById('entidad-estado').value = 'publicado';
+  document.getElementById('btn-guardar-entidad').textContent = 'Crear Entidad';
+
+  if (typeof modal.showModal === 'function') {
+    modal.showModal();
+  }
+}
+
+function abrirModalEditarEntidad(id, nombre, tipo, url, estado) {
+  const modal = document.getElementById('modal-entidad');
+  if (!modal) return;
+  document.getElementById('modal-entidad-titulo').textContent = 'Editar Entidad: ' + id;
+  document.getElementById('entidad-modo').value = 'editar';
+
+  const idInput = document.getElementById('entidad-id');
+  idInput.value = id;
+  idInput.readOnly = true;
+  idInput.style.backgroundColor = 'var(--humm-selection-bg, #f1f5f9)';
+  document.getElementById('entidad-id-ayuda').textContent = 'El ID es inmutable para mantener las referencias de los fondos asociados.';
+
+  document.getElementById('entidad-nombre').value = nombre;
+  document.getElementById('entidad-tipo').value = tipo;
+  document.getElementById('entidad-url').value = url;
+  document.getElementById('entidad-estado').value = estado || 'publicado';
+  document.getElementById('btn-guardar-entidad').textContent = 'Guardar Cambios';
+
+  if (typeof modal.showModal === 'function') {
+    modal.showModal();
+  }
+}
+
+function abrirModalEditarInstrumento(id, nombre, estado, fApertura, fCierre, cierreMod, estadoEditorial) {
+  const modal = document.getElementById('modal-instrumento');
+  if (!modal) return;
+  document.getElementById('inst-id').value = id;
+  document.getElementById('inst-nombre-display').textContent = nombre;
+  document.getElementById('inst-id-badge').textContent = '(' + id + ')';
+  document.getElementById('inst-estado-llamado').value = estado || 'abierta';
+  document.getElementById('inst-fecha-apertura').value = fApertura || '';
+  document.getElementById('inst-fecha-cierre').value = fCierre || '';
+  document.getElementById('inst-cierre-modalidad').value = cierreMod || 'fecha_definida';
+  document.getElementById('inst-estado-editorial').value = estadoEditorial || 'publicado';
+
+  if (typeof modal.showModal === 'function') {
+    modal.showModal();
+  }
+}
+
+function abrirModalEditarConvocatoria(id, nombre, instNombre, estado, fApertura, fCierre, cierreMod, estadoEditorial) {
+  const modal = document.getElementById('modal-convocatoria');
+  if (!modal) return;
+  document.getElementById('conv-id').value = id;
+  document.getElementById('modal-convocatoria-titulo').textContent = 'Editar Convocatoria: ' + id;
+  document.getElementById('conv-inst-display').textContent = instNombre || '-';
+  document.getElementById('conv-nombre').value = nombre;
+  document.getElementById('conv-estado-fuente').value = estado || 'abierta';
+  document.getElementById('conv-fecha-apertura').value = fApertura || '';
+  document.getElementById('conv-fecha-cierre').value = fCierre || '';
+  document.getElementById('conv-cierre-modalidad').value = cierreMod || 'fecha_definida';
+  document.getElementById('conv-estado-editorial').value = estadoEditorial || 'publicado';
+
+  if (typeof modal.showModal === 'function') {
+    modal.showModal();
+  }
+}
+</script>
 {% endblock %}

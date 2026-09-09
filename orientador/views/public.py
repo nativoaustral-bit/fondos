@@ -47,22 +47,32 @@ def procesar_consulta_view(request):
     if request.method != 'POST':
         return redirect('orientador:formulario')
 
+    objetivo_financiamiento = request.POST.get('objetivo_financiamiento', '').strip()
     necesidades = request.POST.getlist('necesidades')
-    situacion = request.POST.get('situacion', '').strip()
+    estado_actividad = request.POST.get('estado_actividad', '').strip()
     region = request.POST.get('region', '').strip()
-    monto_buscado = request.POST.get('monto_buscado', 'no_se').strip()
     rubro = request.POST.get('rubro', 'otro').strip()
 
+    # Retrocompatibilidad con nombres v1
+    situacion = request.POST.get('situacion', '').strip()
+    monto_buscado = request.POST.get('monto_buscado', 'no_se').strip()
+
     # Validaciones amigables
+    if not objetivo_financiamiento and not situacion:
+        request.session['humm_form_error'] = "Por favor selecciona qué quieres lograr con este financiamiento."
+        return redirect('orientador:formulario')
+
     if not necesidades:
         request.session['humm_form_error'] = "Por favor selecciona al menos una necesidad de financiamiento."
         return redirect('orientador:formulario')
 
-    if len(necesidades) > 2:
+    if 'por_definir' in necesidades:
+        necesidades = ['por_definir']
+    elif len(necesidades) > 2:
         necesidades = necesidades[:2]
 
-    if not situacion:
-        request.session['humm_form_error'] = "Por favor indica en qué situación está tu emprendimiento."
+    if not estado_actividad and not situacion:
+        request.session['humm_form_error'] = "Por favor indica la situación actual de tu negocio ante el SII."
         return redirect('orientador:formulario')
 
     if not region:
@@ -70,11 +80,13 @@ def procesar_consulta_view(request):
         return redirect('orientador:formulario')
 
     respuestas = {
+        'objetivo_financiamiento': objetivo_financiamiento,
         'necesidades': necesidades,
+        'estado_actividad': estado_actividad,
         'situacion': situacion,
         'region': region,
-        'monto_buscado': monto_buscado,
         'rubro': rubro,
+        'monto_buscado': monto_buscado,
     }
 
     # Guardar en sesión para permitir volver a editar
@@ -87,15 +99,16 @@ def procesar_consulta_view(request):
     if evaluacion['estado_vacio']:
         MetricaEvento.objects.create(
             tipo_evento=TipoMetrica.CONSULTA_SIN_RESULTADOS,
-            datos={'region': region, 'situacion': situacion}
+            datos={'region': region, 'estado_actividad': estado_actividad or situacion}
         )
     else:
         MetricaEvento.objects.create(
             tipo_evento=TipoMetrica.CONSULTA_COMPLETADA,
-            datos={'region': region, 'situacion': situacion, 'total': evaluacion['total_pertinentes']}
+            datos={'region': region, 'estado_actividad': estado_actividad or situacion, 'total': evaluacion['total_pertinentes']}
         )
 
     context = {
+        'directriz_inicial': evaluacion['directriz_inicial'],
         'resumen_perfil': evaluacion['resumen_perfil'],
         'pertinentes': evaluacion['pertinentes'],
         'proxima_etapa': evaluacion['proxima_etapa'],
