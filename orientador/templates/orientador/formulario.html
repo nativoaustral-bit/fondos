@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load orientador_extras %}
+
+{% block title %}Encuentra opciones de financiamiento — {{ humm_config.nombre_plataforma|default:"Humm Financiamiento" }}{% endblock %}
+
+{% block content %}
+<div class="humm-form-wrapper">
+
+  <section class="humm-hero" aria-labelledby="hero-title">
+    <span class="humm-hero-badge">Orientador Rápido</span>
+    <h1 id="hero-title" class="humm-hero-title">Encuentra opciones de financiamiento para tu emprendimiento</h1>
+    <p class="humm-hero-desc">
+      Cuéntanos qué necesitas y en qué etapa estás. Te mostraremos instrumentos no reembolsables que podrían servirte y qué revisar para avanzar.
+    </p>
+  </section>
+
+  {% if error %}
+    <div class="humm-alert-box estado-cerrada" role="alert">
+      <strong>Por favor revisa:</strong> {{ error }}
+    </div>
+  {% endif %}
+
+  <form method="POST" action="{% url 'orientador:procesar_consulta' %}" id="form-orientador" novalidate>
+    {% csrf_token %}
+
+    {% for p in preguntas %}
+      <fieldset class="humm-step-card" id="fieldset-{{ p.clave }}">
+        <legend class="humm-step-header">
+          <span class="humm-step-number">Pregunta {{ forloop.counter }} de {{ preguntas|length }}</span>
+          <h2 class="humm-step-title">{{ p.titulo }}</h2>
+          {% if p.ayuda %}
+            <p class="humm-step-help">{{ p.ayuda }}</p>
+          {% endif %}
+        </legend>
+
+        {% if p.tipo == 'checkbox_limit' %}
+          <div class="humm-options-grid" data-limit-select="{{ p.limite_seleccion }}">
+            <div class="humm-alert-box estado-atencion humm-limit-warning" style="display: none;" role="alert"></div>
+            {% for op in p.opciones.all %}
+              {% if op.activa %}
+                <label class="humm-option-label {% if op.codigo in respuestas_previas.necesidades %}is-selected{% endif %}" for="op-{{ p.clave }}-{{ op.codigo }}">
+                  <input
+                    type="checkbox"
+                    id="op-{{ p.clave }}-{{ op.codigo }}"
+                    name="{{ p.clave }}"
+                    value="{{ op.codigo }}"
+                    class="humm-option-input"
+                    {% if op.codigo in respuestas_previas.necesidades %}checked{% endif %}
+                  >
+                  <div class="humm-option-content">
+                    <span class="humm-option-title">{{ op.etiqueta }}</span>
+                    {% if op.descripcion_auxiliar %}
+                      <p class="humm-option-desc">{{ op.descripcion_auxiliar }}</p>
+                    {% endif %}
+                  </div>
+                </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+        {% elif p.tipo == 'select' %}
+          <div style="margin-top: var(--humm-space-2);">
+            <label for="select-{{ p.clave }}" class="humm-profile-label" style="display: block; margin-bottom: 6px;">Selecciona tu región</label>
+            <select name="{{ p.clave }}" id="select-{{ p.clave }}" class="humm-select" required>
+              <option value="" disabled {% if not respuestas_previas.region %}selected{% endif %}>Elige una región de Chile...</option>
+              {% for op in p.opciones.all %}
+                {% if op.activa %}
+                  <option value="{{ op.codigo }}" {% if respuestas_previas.region == op.codigo %}selected{% endif %}>
+                    {{ op.etiqueta }}
+                  </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+        {% else %}
+          <!-- Radio buttons (selección única) -->
+          <div class="humm-options-grid" role="radiogroup" aria-labelledby="fieldset-{{ p.clave }}">
+            {% for op in p.opciones.all %}
+              {% if op.activa %}
+                <label class="humm-option-label {% if respuestas_previas|dict_get:p.clave == op.codigo %}is-selected{% endif %}" for="op-{{ p.clave }}-{{ op.codigo }}">
+                  <input
+                    type="radio"
+                    id="op-{{ p.clave }}-{{ op.codigo }}"
+                    name="{{ p.clave }}"
+                    value="{{ op.codigo }}"
+                    class="humm-option-input"
+                    required
+                    {% if respuestas_previas|dict_get:p.clave == op.codigo %}checked{% endif %}
+                  >
+                  <div class="humm-option-content">
+                    <span class="humm-option-title">{{ op.etiqueta }}</span>
+                    {% if op.descripcion_auxiliar %}
+                      <p class="humm-option-desc">{{ op.descripcion_auxiliar }}</p>
+                    {% endif %}
+                  </div>
+                </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </fieldset>
+    {% endfor %}
+
+    <div style="margin-top: var(--humm-space-6); text-align: center;">
+      <button type="submit" class="humm-btn-primary" id="btn-ver-opciones">
+        <span>Ver opciones de financiamiento</span>
+        <span aria-hidden="true">&rarr;</span>
+      </button>
+      <p style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); margin-top: var(--humm-space-3);">
+        No solicitamos datos de contacto ni registro previo para consultar tus opciones.
+      </p>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

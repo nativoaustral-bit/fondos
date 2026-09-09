@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% load orientador_extras %}
+
+{% block title %}Resultados de financiamiento — {{ humm_config.nombre_plataforma|default:"Humm Financiamiento" }}{% endblock %}
+
+{% block content %}
+<div class="humm-results-layout">
+
+  <!-- Columna Principal de Resultados -->
+  <div class="humm-results-main">
+    
+    <div style="margin-bottom: var(--humm-space-6);">
+      <h1 class="humm-hero-title">Opciones para lo que necesitas financiar</h1>
+      <p class="humm-hero-desc">
+        Identificamos <strong>{{ total_pertinentes }}</strong> alternativa{{ total_pertinentes|pluralize:"s" }} para tu perfil
+        {% if total_proxima_etapa %} y <strong>{{ total_proxima_etapa }}</strong> para una próxima etapa{% endif %}.
+      </p>
+    </div>
+
+    {% if estado_vacio %}
+      <div class="humm-step-card" style="text-align: center; padding: var(--humm-space-8);">
+        <h2 style="font-size: var(--humm-font-size-xl); margin-bottom: var(--humm-space-3);">No encontramos instrumentos exactos para esta combinación</h2>
+        <p style="color: var(--humm-text-secondary); max-width: 520px; margin: 0 auto var(--humm-space-6);">
+          Algunos fondos tienen exigencias territoriales o de etapa muy específicas. Prueba modificando tus respuestas o solicita orientación personalizada.
+        </p>
+        <div style="display: flex; gap: var(--humm-space-3); justify-content: center; flex-wrap: wrap;">
+          <a href="{% url 'orientador:formulario' %}" class="humm-btn-secondary">Editar respuestas</a>
+          <button type="button" class="humm-btn-primary" data-open-dialog="dialog-apoyo" style="width: auto;">
+            Solicitar apoyo a Humm
+          </button>
+        </div>
+      </div>
+
+    {% else %}
+
+      <!-- 1. Opciones pertinentes para postular o preparar ahora -->
+      <section aria-labelledby="sec-pertinentes">
+        <h2 id="sec-pertinentes" style="font-size: var(--humm-font-size-lg); color: var(--humm-action); margin-bottom: var(--humm-space-4); display: flex; align-items: center; gap: 8px;">
+          <span>Opciones para postular ahora o preparar postulación</span>
+          <span style="font-size: var(--humm-font-size-xs); background: var(--humm-selection-bg); padding: 2px 8px; border-radius: var(--humm-radius-full);">{{ total_pertinentes }}</span>
+        </h2>
+
+        <!-- Primeros 3 resultados -->
+        {% for item in pertinentes|slice:":3" %}
+          {% include "orientador/_tarjeta_instrumento.html" with item=item %}
+        {% endfor %}
+
+        <!-- Resultados adicionales (ocultos inicialmente si hay más de 3) -->
+        {% if pertinentes|length > 3 %}
+          <div id="lista-opciones-adicionales" style="display: none;">
+            {% for item in pertinentes|slice:"3:" %}
+              {% include "orientador/_tarjeta_instrumento.html" with item=item %}
+            {% endfor %}
+          </div>
+          
+          <div style="text-align: center; margin: var(--humm-space-6) 0;">
+            <button type="button" id="btn-ver-mas-opciones" class="humm-btn-secondary" style="width: 100%; max-width: 360px;">
+              Ver {{ pertinentes|length|add:"-3" }} opciones más de financiamiento
+            </button>
+          </div>
+        {% endif %}
+      </section>
+
+      <!-- 2. Opciones para una próxima etapa (si existen) -->
+      {% if proxima_etapa %}
+        <section aria-labelledby="sec-proxima-etapa" style="margin-top: var(--humm-space-10);">
+          <div style="background: #F0F4F2; border-radius: var(--humm-radius-md); padding: var(--humm-space-4); margin-bottom: var(--humm-space-4);">
+            <h2 id="sec-proxima-etapa" style="font-size: var(--humm-font-size-md); color: var(--humm-text-primary); margin-bottom: 4px;">
+              Para una próxima etapa (requieren formalización o hito previo)
+            </h2>
+            <p style="font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary);">
+              Estos instrumentos exigen requisitos que aún no declaras (como inicio de actividades en 1ª categoría ante el SII). Te los mostramos para que conozcas los pasos a seguir.
+            </p>
+          </div>
+
+          {% for item in proxima_etapa %}
+            {% include "orientador/_tarjeta_instrumento.html" with item=item es_proxima=True %}
+          {% endfor %}
+        </section>
+      {% endif %}
+
+      <!-- 3. Tu Siguiente Paso Estratégico -->
+      <section class="humm-next-step-box" aria-labelledby="next-step-title">
+        <span class="humm-next-step-badge">Estrategia recomendada</span>
+        <h2 id="next-step-title" style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin-top: 4px;">
+          Tu siguiente paso: {{ siguiente_paso.accion_principal }}
+        </h2>
+        <ul class="humm-next-step-tasks">
+          {% for t in siguiente_paso.tareas %}
+            <li>{{ t }}</li>
+          {% endfor %}
+        </ul>
+
+        <div style="margin-top: var(--humm-space-5); border-top: 1px solid var(--humm-border); padding-top: var(--humm-space-4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--humm-space-3);">
+          <div>
+            <strong style="font-size: var(--humm-font-size-sm); color: var(--humm-text-primary);">¿Necesitas orientación para postular?</strong>
+            <p style="font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary);">Podemos ayudarte a revisar las bases y preparar tu proyecto.</p>
+          </div>
+          <button type="button" class="humm-btn-primary" data-open-dialog="dialog-apoyo" style="width: auto;">
+            Quiero apoyo para dar el siguiente paso
+          </button>
+        </div>
+      </section>
+
+    {% endif %}
+  </div>
+
+  <!-- Panel Lateral Discreto con Perfil y Acciones -->
+  <aside class="humm-results-sidebar" aria-label="Resumen de tus respuestas">
+    <div class="humm-profile-summary">
+      <div class="humm-profile-summary-header">
+        <h2 style="font-size: var(--humm-font-size-md); font-weight: 700; color: var(--humm-text-primary);">Tu perfil consultado</h2>
+        <a href="{% url 'orientador:formulario' %}" class="humm-btn-secondary" style="font-size: var(--humm-font-size-xs); padding: 4px 10px; min-height: 32px;">
+          Editar respuestas
+        </a>
+      </div>
+
+      <div class="humm-profile-item">
+        <span class="humm-profile-label">Necesidades elegidas:</span>
+        <div class="humm-profile-val">
+          {% for n in resumen_perfil.necesidades %}
+            <span style="display: inline-block; background: var(--humm-selection-bg); color: var(--humm-action); font-size: var(--humm-font-size-xs); padding: 2px 8px; border-radius: 4px; margin: 2px 2px 2px 0;">
+              {{ n }}
+            </span>
+          {% empty %}
+            Sin especificar
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="humm-profile-item">
+        <span class="humm-profile-label">Situación actual:</span>
+        <p class="humm-profile-val">{{ resumen_perfil.situacion }}</p>
+      </div>
+
+      <div class="humm-profile-item">
+        <span class="humm-profile-label">Región:</span>
+        <p class="humm-profile-val">{{ resumen_perfil.region }}</p>
+      </div>
+
+      <div class="humm-profile-item">
+        <span class="humm-profile-label">Monto de referencia:</span>
+        <p class="humm-profile-val">{{ resumen_perfil.monto }}</p>
+      </div>
+
+      <div class="humm-profile-item">
+        <span class="humm-profile-label">Rubro:</span>
+        <p class="humm-profile-val">{{ resumen_perfil.rubro }}</p>
+      </div>
+
+      <div style="margin-top: var(--humm-space-5); border-top: 1px solid var(--humm-border); padding-top: var(--humm-space-4);">
+        <p style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); line-height: 1.4;">
+          Orientador determinista Humm. Los resultados no constituyen adjudicación garantizada.
+        </p>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Modal de Solicitud de Apoyo -->
+<dialog id="dialog-apoyo" class="humm-dialog" aria-labelledby="dialog-apoyo-title">
+  <div class="humm-dialog-header">
+    <h2 id="dialog-apoyo-title" style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary);">
+      Quiero apoyo para dar el siguiente paso
+    </h2>
+    <button type="button" class="humm-dialog-close" data-close-dialog aria-label="Cerrar modal">&times;</button>
+  </div>
+  <div class="humm-dialog-body">
+    <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary); margin-bottom: var(--humm-space-4);">
+      Déjanos tus datos de contacto y un integrante del equipo de Comunidad Humm te orientará sobre cómo preparar tu postulación.
+    </p>
+
+    <div id="solicitud-feedback" style="display: none;"></div>
+
+    <form method="POST" action="{% url 'orientador:solicitar_apoyo' %}" id="form-solicitud-apoyo">
+      {% csrf_token %}
+      
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="id_nombre" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">Tu nombre</label>
+        <input type="text" id="id_nombre" name="nombre" class="humm-select" required placeholder="Ej. Ana Pérez">
+      </div>
+
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="id_canal" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">¿Por dónde prefieres que te contactemos?</label>
+        <select id="id_canal" name="canal_contacto" class="humm-select" required>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="email">Correo electrónico</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="id_contacto" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">Número de WhatsApp o Correo</label>
+        <input type="text" id="id_contacto" name="contacto_valor" class="humm-select" required placeholder="+569... o tu@correo.com">
+      </div>
+
+      <div style="margin-bottom: var(--humm-space-3);">
+        <label for="id_mensaje" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">Mensaje o duda específica (opcional)</label>
+        <textarea id="id_mensaje" name="mensaje" rows="3" class="humm-select" style="min-height: 80px;" placeholder="¿Hay algún fondo en particular que te interese?"></textarea>
+      </div>
+
+      <div style="margin-bottom: var(--humm-space-4);">
+        <label style="display: flex; align-items: flex-start; gap: 8px; font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary); cursor: pointer;">
+          <input type="checkbox" name="adjuntar_perfil" value="si" checked style="margin-top: 3px;">
+          <span>Adjuntar las respuestas de mi perfil consultado para facilitar la orientación.</span>
+        </label>
+      </div>
+
+      <div style="margin-bottom: var(--humm-space-5);">
+        <label style="display: flex; align-items: flex-start; gap: 8px; font-size: var(--humm-font-size-xs); color: var(--humm-text-primary); cursor: pointer;">
+          <input type="checkbox" name="autorizacion_contacto" value="si" required style="margin-top: 3px;">
+          <span><strong>Autorizo expresamente a Comunidad Humm a contactarme</strong> para responder esta solicitud.</span>
+        </label>
+      </div>
+
+      <button type="submit" class="humm-btn-primary">
+        Enviar solicitud de apoyo
+      </button>
+    </form>
+  </div>
+</dialog>
+
+{% endblock %}

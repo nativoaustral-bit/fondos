@@ -1,0 +1,78 @@
+{% extends "admin_humm/base_admin.html" %}
+
+{% block title %}Importar y Exportar Catálogo (.xlsx) — Humm{% endblock %}
+
+{% block admin_content %}
+<div>
+
+  <div style="margin-bottom: var(--humm-space-6);">
+    <h1 class="humm-hero-title" style="font-size: var(--humm-font-size-xl); margin-bottom: 4px;">
+      Importar y Exportar Catálogo (.xlsx)
+    </h1>
+    <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary);">
+      Actualiza datos de entidades, programas y convocatorias sin tocar el código. La plataforma utiliza Microsoft Excel (.xlsx) como contrato de datos.
+    </p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--humm-space-6); margin-bottom: var(--humm-space-8);">
+    
+    <!-- 1. Descargas -->
+    <div class="humm-step-card">
+      <h2 style="font-size: var(--humm-font-size-md); color: var(--humm-text-primary); margin-bottom: var(--humm-space-3);">
+        1. Descargar base o plantilla
+      </h2>
+      <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary); margin-bottom: var(--humm-space-4);">
+        Descarga la base vigente para investigar y actualizar datos con el chat de investigación, o una plantilla limpia con el esquema estándar.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: var(--humm-space-3);">
+        <a href="{% url 'orientador:admin_exportar' %}" class="humm-btn-primary" style="text-decoration: none;">
+          <span>Exportar base vigente (v{{ config.version_catalogo }})</span>
+          <span aria-hidden="true">&darr;</span>
+        </a>
+
+        <a href="{% url 'orientador:admin_plantilla' %}" class="humm-btn-secondary" style="text-decoration: none;">
+          <span>Descargar plantilla canónica vacía (.xlsx)</span>
+          <span aria-hidden="true">&darr;</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 2. Subida de actualización -->
+    <div class="humm-step-card">
+      <h2 style="font-size: var(--humm-font-size-md); color: var(--humm-text-primary); margin-bottom: var(--humm-space-3);">
+        2. Subir archivo actualizado
+      </h2>
+      <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary); margin-bottom: var(--humm-space-4);">
+        Sube el archivo Excel modificado. El sistema generará una <strong>previsualización de diferencias</strong> detallada antes de realizar cualquier cambio en la base de datos.
+      </p>
+
+      <form method="POST" action="{% url 'orientador:admin_subir_excel' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div style="margin-bottom: var(--humm-space-4);">
+          <input type="file" name="archivo_excel" accept=".xlsx" required class="humm-select" style="padding: 10px;">
+        </div>
+        <button type="submit" class="humm-btn-primary">
+          Analizar archivo y ver diferencias
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Reglas y Convenciones del Contrato -->
+  <section class="humm-step-card" style="background: #FAFBF9; margin-bottom: var(--humm-space-8);">
+    <h3 style="font-size: var(--humm-font-size-md); color: var(--humm-text-primary); margin-bottom: var(--humm-space-3);">
+      📋 Convenciones del Contrato Excel (.xlsx)
+    </h3>
+    <ul style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary); padding-left: 20px; line-height: 1.6;">
+      <li><strong>Actualización por ID:</strong> No modifiques los identificadores existentes (<code>entidad_id</code>, <code>instrumento_id</code>, <code>convocatoria_id</code>).</li>
+      <li><strong>HEREDAR:</strong> Puedes escribir <code>HEREDAR</code> en convocatorias para adoptar automáticamente el valor del instrumento padre sin duplicar texto.</li>
+      <li><strong>__BORRAR__:</strong> Escribe <code>__BORRAR__</code> en una celda si deseas vaciar expresamente un campo opcional existente.</li>
+      <li><strong>Celdas vacías:</strong> Al actualizar un registro existente, dejar una celda vacía conserva el valor que ya tiene en la base de datos.</li>
+      <li><strong>Verificación independiente:</strong> Las columnas terminadas en <code>_verificado_en</code> solo deben actualizarse cuando efectivamente comprobaste ese dato en la fuente oficial.</li>
+    </ul>
+  </section>
+
+</div>
+{% endblock %}

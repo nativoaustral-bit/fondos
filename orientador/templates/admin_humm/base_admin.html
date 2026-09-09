@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; width: 100%;">
+
+  <!-- Mensajes del sistema -->
+  {% if messages %}
+    <div style="margin-bottom: var(--humm-space-4);">
+      {% for msg in messages %}
+        <div class="humm-alert-box {% if msg.tags == 'success' %}estado-abierta{% else %}estado-atencion{% endif %}" role="alert">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Navegación de Administración en 4 Secciones (Sección 11 del encargo) -->
+  <nav class="humm-admin-nav" aria-label="Navegación del panel de administración">
+    <div class="humm-admin-nav-inner">
+      <a href="{% url 'orientador:admin_dashboard' %}" class="humm-admin-tab {% if request.resolver_match.url_name == 'admin_dashboard' %}is-active{% endif %}">
+        Dashboard
+      </a>
+      <a href="{% url 'orientador:admin_catalogo' %}" class="humm-admin-tab {% if request.resolver_match.url_name == 'admin_catalogo' %}is-active{% endif %}">
+        Catálogo
+      </a>
+      <a href="{% url 'orientador:admin_preguntas' %}" class="humm-admin-tab {% if request.resolver_match.url_name == 'admin_preguntas' %}is-active{% endif %}">
+        Preguntas y Orientación
+      </a>
+      <a href="{% url 'orientador:admin_import_export' %}" class="humm-admin-tab {% if 'import' in request.resolver_match.url_name %}is-active{% endif %}">
+        Importar y Exportar
+      </a>
+      <a href="{% url 'orientador:admin_configuracion' %}" class="humm-admin-tab {% if request.resolver_match.url_name == 'admin_configuracion' %}is-active{% endif %}">
+        Configuración
+      </a>
+    </div>
+  </nav>
+
+  {% block admin_content %}{% endblock %}
+
+</div>
+{% endblock %}

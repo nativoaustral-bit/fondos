@@ -1,0 +1,201 @@
+{% extends "admin_humm/base_admin.html" %}
+{% load orientador_extras %}
+
+{% block title %}Dashboard Administrativo — {{ humm_config.nombre_plataforma }}{% endblock %}
+
+{% block admin_content %}
+<div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--humm-space-3); margin-bottom: var(--humm-space-6);">
+    <div>
+      <h1 class="humm-hero-title" style="font-size: var(--humm-font-size-xl); margin-bottom: 2px;">
+        Panel de Control Editorial
+      </h1>
+      <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary);">
+        Estado actual del catálogo (Catálogo versión {{ config.version_catalogo }})
+      </p>
+    </div>
+
+    <div style="display: flex; gap: var(--humm-space-2); flex-wrap: wrap;">
+      <a href="{% url 'orientador:admin_exportar' %}" class="humm-btn-secondary" style="font-size: var(--humm-font-size-xs);">
+        Exportar base (.xlsx)
+      </a>
+      <a href="{% url 'orientador:admin_import_export' %}" class="humm-btn-primary" style="width: auto; font-size: var(--humm-font-size-xs); min-height: 38px;">
+        Importar actualización
+      </a>
+    </div>
+  </div>
+
+  <!-- Métricas principales -->
+  <div class="humm-stats-grid">
+    <div class="humm-stat-card">
+      <div class="humm-stat-num">{{ total_entidades }}</div>
+      <div class="humm-stat-label">Entidades registradas</div>
+    </div>
+    <div class="humm-stat-card">
+      <div class="humm-stat-num">{{ total_instrumentos }}</div>
+      <div class="humm-stat-label">Instrumentos en catálogo</div>
+    </div>
+    <div class="humm-stat-card">
+      <div class="humm-stat-num">{{ total_convocatorias }}</div>
+      <div class="humm-stat-label">Convocatorias totales</div>
+    </div>
+    <div class="humm-stat-card">
+      <div class="humm-stat-num" style="color: {% if requieren_atencion %}#C05621{% else %}var(--humm-action){% endif %};">
+        {{ requieren_atencion|length }}
+      </div>
+      <div class="humm-stat-label">Convocatorias por revisar</div>
+    </div>
+    <div class="humm-stat-card">
+      <div class="humm-stat-num">{{ solicitudes_nuevas }}</div>
+      <div class="humm-stat-label">Solicitudes de apoyo nuevas</div>
+    </div>
+  </div>
+
+  <!-- Convocatorias que requieren atención (reglas de vigencia) -->
+  {% if requieren_atencion %}
+    <section style="margin-bottom: var(--humm-space-8);">
+      <h2 style="font-size: var(--humm-font-size-lg); color: var(--humm-warning-text); margin-bottom: var(--humm-space-3); display: flex; align-items: center; gap: 8px;">
+        <span>⚠️ Convocatorias que requieren revisión editorial</span>
+        <span style="font-size: var(--humm-font-size-xs); background: var(--humm-warning-bg); padding: 2px 8px; border-radius: var(--humm-radius-full);">{{ requieren_atencion|length }}</span>
+      </h2>
+
+      <div class="humm-admin-table-wrap">
+        <table class="humm-admin-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Convocatoria / Instrumento</th>
+              <th>Estado Calculado</th>
+              <th>Motivo de Atención</th>
+              <th>Cierre / Verificación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in requieren_atencion %}
+              <tr>
+                <td><code>{{ item.convocatoria.convocatoria_id }}</code></td>
+                <td>
+                  <strong>{{ item.convocatoria.nombre }}</strong><br>
+                  <span style="font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary);">{{ item.convocatoria.instrumento.nombre }}</span>
+                </td>
+                <td>
+                  <span class="humm-status-badge {{ item.estado.clase_css }}">
+                    {{ item.estado.etiqueta }}
+                  </span>
+                </td>
+                <td style="font-size: var(--humm-font-size-xs); max-width: 300px;">
+                  {{ item.estado.explicacion }}
+                </td>
+                <td style="font-size: var(--humm-font-size-xs);">
+                  {% if item.convocatoria.fecha_cierre %}
+                    Cierre: {{ item.convocatoria.fecha_cierre|date:"d-m-Y" }}
+                  {% else %}
+                    Sin fecha cierre
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- Convocatorias abiertas verificadas activas -->
+  <section style="margin-bottom: var(--humm-space-8);">
+    <h2 style="font-size: var(--humm-font-size-lg); color: var(--humm-action); margin-bottom: var(--humm-space-3);">
+      Convocatorias abiertas y verificadas actualmente ({{ abiertas_activas|length }})
+    </h2>
+
+    <div class="humm-admin-table-wrap">
+      <table class="humm-admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Entidad</th>
+            <th>Cobertura</th>
+            <th>Cierre Previsto</th>
+            <th>Estado Mostrado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in abiertas_activas %}
+            <tr>
+              <td><code>{{ item.convocatoria.convocatoria_id }}</code></td>
+              <td><strong>{{ item.convocatoria.nombre }}</strong></td>
+              <td>{{ item.convocatoria.instrumento.entidad.nombre }}</td>
+              <td>{{ item.convocatoria.get_effective_field:'cobertura' }}</td>
+              <td>{{ item.convocatoria.fecha_cierre|date:"d-m-Y"|default:"Permanente" }}</td>
+              <td>
+                <span class="humm-status-badge {{ item.estado.clase_css }}">
+                  {{ item.estado.etiqueta }}
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--humm-text-muted); padding: var(--humm-space-6);">
+                No hay convocatorias abiertas verificadas en este momento. Todas están en preparación o cerradas.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Historial de lotes recientes -->
+  <section>
+    <h2 style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin-bottom: var(--humm-space-3);">
+      Historial reciente de actualizaciones
+    </h2>
+    <div class="humm-admin-table-wrap">
+      <table class="humm-admin-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Archivo</th>
+            <th>Responsable</th>
+            <th>Versión BD</th>
+            <th>Resumen</th>
+            <th>Estado / Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for lote in ultimos_lotes %}
+            <tr>
+              <td>{{ lote.created_at|date:"d-m-Y H:i" }}</td>
+              <td><strong>{{ lote.archivo_nombre }}</strong></td>
+              <td>{{ lote.usuario_responsable }}</td>
+              <td>v{{ lote.version_base_anterior }} &rarr; v{{ lote.version_base_nueva }}</td>
+              <td style="font-size: var(--humm-font-size-xs); max-width: 320px;">{{ lote.resumen }}</td>
+              <td>
+                {% if lote.estado == 'aplicado' %}
+                  <span class="humm-status-badge estado-abierta">Aplicado</span>
+                  <form method="POST" action="{% url 'orientador:admin_revertir' lote.lote_id %}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de revertir este lote de importación? Se restaurarán los valores previos.');">
+                    {% csrf_token %}
+                    <button type="submit" style="background: none; border: none; color: var(--humm-danger-text); text-decoration: underline; font-size: var(--humm-font-size-xs); cursor: pointer; margin-left: 6px;">
+                      Revertir
+                    </button>
+                  </form>
+                {% else %}
+                  <span class="humm-status-badge estado-cerrada">Revertido el {{ lote.revertido_en|date:"d-m-Y" }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--humm-text-muted); padding: var(--humm-space-6);">
+                Aún no se han registrado importaciones vía Excel.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+{% endblock %}

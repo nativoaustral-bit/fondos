@@ -1,0 +1,14 @@
+Options +ExecCGI +FollowSymLinks
+AddHandler cgi-script .py .cgi
+DirectoryIndex passenger_wsgi.py
+
+RewriteEngine On
+
+# Permitir acceso directo a archivos estáticos y multimedia sin pasar por Django
+RewriteCond %{REQUEST_URI} ^/(static|staticfiles|media)/ [NC,OR]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ passenger_wsgi.py/$1 [QSA,L]

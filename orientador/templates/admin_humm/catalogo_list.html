@@ -1,0 +1,172 @@
+{% extends "admin_humm/base_admin.html" %}
+{% load orientador_extras %}
+
+{% block title %}Catálogo — Administración Humm{% endblock %}
+
+{% block admin_content %}
+<div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--humm-space-3); margin-bottom: var(--humm-space-4);">
+    <h1 class="humm-hero-title" style="font-size: var(--humm-font-size-xl);">Catálogo de Fondos</h1>
+
+    <!-- Pestañas de sección interna -->
+    <div style="display: flex; gap: 8px;">
+      <a href="?seccion=instrumentos" class="humm-btn-secondary {% if seccion == 'instrumentos' %}is-selected{% endif %}" style="font-size: var(--humm-font-size-xs); {% if seccion == 'instrumentos' %}background: var(--humm-selection-bg);{% endif %}">
+        Instrumentos ({{ instrumentos|length }})
+      </a>
+      <a href="?seccion=convocatorias" class="humm-btn-secondary {% if seccion == 'convocatorias' %}is-selected{% endif %}" style="font-size: var(--humm-font-size-xs); {% if seccion == 'convocatorias' %}background: var(--humm-selection-bg);{% endif %}">
+        Convocatorias ({{ convocatorias|length }})
+      </a>
+      <a href="?seccion=entidades" class="humm-btn-secondary {% if seccion == 'entidades' %}is-selected{% endif %}" style="font-size: var(--humm-font-size-xs); {% if seccion == 'entidades' %}background: var(--humm-selection-bg);{% endif %}">
+        Entidades ({{ entidades|length }})
+      </a>
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <form method="GET" style="margin-bottom: var(--humm-space-5); display: flex; gap: var(--humm-space-2);">
+    <input type="hidden" name="seccion" value="{{ seccion }}">
+    <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre o ID..." class="humm-select" style="max-width: 400px;">
+    <button type="submit" class="humm-btn-primary" style="width: auto; padding: 0 20px;">Buscar</button>
+    {% if query %}
+      <a href="?seccion={{ seccion }}" class="humm-btn-secondary" style="display: inline-flex; align-items: center;">Limpiar</a>
+    {% endif %}
+  </form>
+
+  {% if seccion == 'entidades' %}
+    <div class="humm-admin-table-wrap">
+      <table class="humm-admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>URL Oficial</th>
+            <th>Estado Editorial</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ent in entidades %}
+            <tr>
+              <td><code>{{ ent.entidad_id }}</code></td>
+              <td><strong>{{ ent.nombre }}</strong></td>
+              <td>{{ ent.get_tipo_display }}</td>
+              <td><a href="{{ ent.url_oficial }}" target="_blank" rel="noopener">{{ ent.url_oficial|truncatechars:35 }}</a></td>
+              <td>
+                <span class="humm-status-badge {% if ent.estado_editorial == 'publicado' %}estado-abierta{% else %}estado-anunciada{% endif %}">
+                  {{ ent.get_estado_editorial_display }}
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" style="text-align: center; padding: var(--humm-space-6);">No se encontraron entidades.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% elif seccion == 'convocatorias' %}
+    <div class="humm-admin-table-wrap">
+      <table class="humm-admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Convocatoria</th>
+            <th>Instrumento / Entidad</th>
+            <th>Apertura</th>
+            <th>Cierre</th>
+            <th>Estado Mostrado</th>
+            <th>Estado Editorial</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in convocatorias %}
+            <tr>
+              <td><code>{{ c.objeto.convocatoria_id }}</code></td>
+              <td>
+                <strong>{{ c.objeto.nombre }}</strong>
+                {% if c.objeto.url_convocatoria %}
+                  <a href="{{ c.objeto.url_convocatoria }}" target="_blank" rel="noopener" style="font-size: 0.75rem; margin-left: 4px;">&#x2197;</a>
+                {% endif %}
+              </td>
+              <td style="font-size: var(--humm-font-size-xs);">
+                {{ c.objeto.instrumento.nombre }}<br>
+                <span style="color: var(--humm-text-muted);">{{ c.objeto.instrumento.entidad.nombre }}</span>
+              </td>
+              <td>{{ c.objeto.fecha_apertura|date:"d-m-Y"|default:"-" }}</td>
+              <td>{{ c.objeto.fecha_cierre|date:"d-m-Y"|default:"-" }}</td>
+              <td>
+                <span class="humm-status-badge {{ c.estado_calc.clase_css }}">
+                  {{ c.estado_calc.etiqueta }}
+                </span>
+              </td>
+              <td>
+                <span class="humm-status-badge {% if c.objeto.estado_editorial == 'publicado' %}estado-abierta{% else %}estado-anunciada{% endif %}">
+                  {{ c.objeto.get_estado_editorial_display }}
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" style="text-align: center; padding: var(--humm-space-6);">No se encontraron convocatorias.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% else %}
+    <!-- Instrumentos -->
+    <div class="humm-admin-table-wrap">
+      <table class="humm-admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Instrumento</th>
+            <th>Entidad</th>
+            <th>Monto Máximo</th>
+            <th>Cobertura</th>
+            <th>Vigencia Datos</th>
+            <th>Estado Editorial</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in instrumentos %}
+            <tr>
+              <td><code>{{ item.objeto.instrumento_id }}</code></td>
+              <td>
+                <strong>{{ item.objeto.nombre }}</strong>
+                {% if item.objeto.url_programa %}
+                  <a href="{{ item.objeto.url_programa }}" target="_blank" rel="noopener" style="font-size: 0.75rem; margin-left: 4px;">&#x2197;</a>
+                {% endif %}
+              </td>
+              <td>{{ item.objeto.entidad.nombre }}</td>
+              <td>
+                {% if item.objeto.monto_max %}
+                  {{ item.objeto.monto_max|format_money:item.objeto.moneda }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{{ item.objeto.get_cobertura_display }}</td>
+              <td style="font-size: var(--humm-font-size-xs);">
+                {% if item.vigencia.desactualizado %}
+                  <span style="color: #9B1C1C;">⚠️ Desactualizado</span>
+                {% else %}
+                  <span style="color: #135738;">✓ Al día</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="humm-status-badge {% if item.objeto.estado_editorial == 'publicado' %}estado-abierta{% else %}estado-anunciada{% endif %}">
+                  {{ item.objeto.get_estado_editorial_display }}
+                </span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" style="text-align: center; padding: var(--humm-space-6);">No se encontraron instrumentos.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

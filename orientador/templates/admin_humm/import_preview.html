@@ -1,0 +1,174 @@
+{% extends "admin_humm/base_admin.html" %}
+
+{% block title %}Previsualización de Diferencias — Humm{% endblock %}
+
+{% block admin_content %}
+<div>
+
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--humm-space-3); margin-bottom: var(--humm-space-6);">
+    <div>
+      <h1 class="humm-hero-title" style="font-size: var(--humm-font-size-xl); margin-bottom: 4px;">
+        Previsualización de Actualización
+      </h1>
+      <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary);">
+        Archivo: <strong>{{ resumen.archivo_nombre }}</strong> · Versión base del archivo: v{{ resumen.version_archivo }} (Base actual: v{{ resumen.version_actual }})
+      </p>
+    </div>
+
+    <a href="{% url 'orientador:admin_import_export' %}" class="humm-btn-secondary" style="font-size: var(--humm-font-size-xs);">
+      &larr; Cancelar y volver
+    </a>
+  </div>
+
+  <!-- Errores bloqueantes -->
+  {% if resumen.errores %}
+    <div class="humm-alert-box estado-cerrada" style="margin-bottom: var(--humm-space-6);">
+      <h3 style="font-size: var(--humm-font-size-md); margin-bottom: 6px;">⛔ Se encontraron errores que impiden aplicar la actualización:</h3>
+      <ul style="padding-left: 20px; font-size: var(--humm-font-size-sm);">
+        {% for err in resumen.errores %}
+          <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+      <p style="font-size: var(--humm-font-size-xs); margin-top: 8px;">
+        Corrige estos puntos en tu archivo Excel y vuelve a subirlo.
+      </p>
+    </div>
+  {% endif %}
+
+  <!-- Advertencias -->
+  {% if resumen.advertencias %}
+    <div class="humm-alert-box estado-atencion" style="margin-bottom: var(--humm-space-6);">
+      <h3 style="font-size: var(--humm-font-size-md); margin-bottom: 6px;">⚠️ Advertencias detectadas:</h3>
+      <ul style="padding-left: 20px; font-size: var(--humm-font-size-sm);">
+        {% for adv in resumen.advertencias %}
+          <li>{{ adv }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <!-- Resumen cuantitativo de cambios -->
+  <div class="humm-stats-grid" style="margin-bottom: var(--humm-space-6);">
+    <div class="humm-stat-card">
+      <div class="humm-stat-num">+{{ resumen.conteo.entidades.nuevas }} / ~{{ resumen.conteo.entidades.modificadas }}</div>
+      <div class="humm-stat-label">Entidades (Nuevas / Modificadas)</div>
+    </div>
+    <div class="humm-stat-card">
+      <div class="humm-stat-num">+{{ resumen.conteo.instrumentos.nuevos }} / ~{{ resumen.conteo.instrumentos.modificados }}</div>
+      <div class="humm-stat-label">Instrumentos (Nuevos / Modificados)</div>
+    </div>
+    <div class="humm-stat-card">
+      <div class="humm-stat-num">+{{ resumen.conteo.convocatorias.nuevas }} / ~{{ resumen.conteo.convocatorias.modificados }}</div>
+      <div class="humm-stat-label">Convocatorias (Nuevas / Modificadas)</div>
+    </div>
+  </div>
+
+  <!-- Botón de Confirmación (Solo si es válido y no hay errores) -->
+  {% if resumen.valido %}
+    <div class="humm-step-card" style="background: #EAF4EE; border: 2px solid var(--humm-action); margin-bottom: var(--humm-space-8); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--humm-space-4);">
+      <div>
+        <h3 style="font-size: var(--humm-font-size-md); color: var(--humm-action); margin-bottom: 2px;">
+          ✓ Archivo validado correctamente
+        </h3>
+        <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-primary);">
+          Se aplicarán todos los cambios en una sola transacción segura. Se creará la versión v{{ resumen.version_actual|add:1 }} de catálogo.
+        </p>
+      </div>
+
+      <form method="POST" action="{% url 'orientador:admin_confirmar_importacion' %}">
+        {% csrf_token %}
+        <button type="submit" class="humm-btn-primary" style="width: auto; padding: 12px 28px;">
+          Confirmar y aplicar cambios en catálogo
+        </button>
+      </form>
+    </div>
+  {% endif %}
+
+  <!-- Detalle de Modificaciones (Diffs) -->
+  <section style="margin-bottom: var(--humm-space-8);">
+    <h2 style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin-bottom: var(--humm-space-3);">
+      Detalle de Diferencias Detectadas
+    </h2>
+
+    {% if resumen.diferencias.instrumentos_modificados %}
+      <div class="humm-step-card" style="margin-bottom: var(--humm-space-4);">
+        <h3 style="font-size: var(--humm-font-size-md); color: var(--humm-action); margin-bottom: var(--humm-space-3);">
+          Instrumentos Modificados ({{ resumen.diferencias.instrumentos_modificados|length }})
+        </h3>
+        <div class="humm-admin-table-wrap">
+          <table class="humm-admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Instrumento</th>
+                <th>Campo Modificado</th>
+                <th>Valor Anterior</th>
+                <th>Valor Propuesto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for mod in resumen.diferencias.instrumentos_modificados %}
+                {% for campo, vals in mod.cambios.items %}
+                  <tr>
+                    {% if forloop.first %}
+                      <td rowspan="{{ mod.cambios|length }}"><code>{{ mod.id }}</code></td>
+                      <td rowspan="{{ mod.cambios|length }}"><strong>{{ mod.nombre }}</strong></td>
+                    {% endif %}
+                    <td><code>{{ campo }}</code></td>
+                    <td><span class="diff-cell-old">{{ vals.anterior }}</span></td>
+                    <td><span class="diff-cell-new">{{ vals.propuesto }}</span></td>
+                  </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if resumen.diferencias.convocatorias_modificadas %}
+      <div class="humm-step-card" style="margin-bottom: var(--humm-space-4);">
+        <h3 style="font-size: var(--humm-font-size-md); color: var(--humm-action); margin-bottom: var(--humm-space-3);">
+          Convocatorias Modificadas ({{ resumen.diferencias.convocatorias_modificadas|length }})
+        </h3>
+        <div class="humm-admin-table-wrap">
+          <table class="humm-admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Convocatoria</th>
+                <th>Campo Modificado</th>
+                <th>Valor Anterior</th>
+                <th>Valor Propuesto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for mod in resumen.diferencias.convocatorias_modificadas %}
+                {% for campo, vals in mod.cambios.items %}
+                  <tr>
+                    {% if forloop.first %}
+                      <td rowspan="{{ mod.cambios|length }}"><code>{{ mod.id }}</code></td>
+                      <td rowspan="{{ mod.cambios|length }}"><strong>{{ mod.nombre }}</strong></td>
+                    {% endif %}
+                    <td><code>{{ campo }}</code></td>
+                    <td><span class="diff-cell-old">{{ vals.anterior }}</span></td>
+                    <td><span class="diff-cell-new">{{ vals.propuesto }}</span></td>
+                  </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if not resumen.diferencias.instrumentos_modificados and not resumen.diferencias.convocatorias_modificadas and not resumen.diferencias.instrumentos_nuevos and not resumen.diferencias.convocatorias_nuevas %}
+      <div class="humm-step-card" style="text-align: center; padding: var(--humm-space-6); color: var(--humm-text-muted);">
+        No se detectaron diferencias entre el archivo y la base de datos actual.
+      </div>
+    {% endif %}
+
+  </section>
+
+</div>
+{% endblock %}

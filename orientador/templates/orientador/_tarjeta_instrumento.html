@@ -1,0 +1,209 @@
+{% load orientador_extras %}
+
+<article class="humm-fund-card" id="card-{{ item.instrumento.instrumento_id }}">
+  
+  <header class="humm-fund-header">
+    <span class="humm-entity-badge">{{ item.instrumento.entidad.nombre }}</span>
+    {% if item.convocatoria_principal %}
+      <span class="humm-status-badge {{ item.convocatoria_principal.estado_calculado.clase_css }}">
+        {{ item.convocatoria_principal.estado_calculado.etiqueta }}
+      </span>
+    {% else %}
+      <span class="humm-status-badge estado-anunciada">
+        Programa de referencia
+      </span>
+    {% endif %}
+  </header>
+
+  <h3 class="humm-fund-title">{{ item.instrumento.nombre }}</h3>
+
+  <!-- Razón concreta de aparición -->
+  <div class="humm-match-reason">
+    <strong>Por qué aparece:</strong> {{ item.por_que_aparece }}
+  </div>
+
+  {% if es_proxima %}
+    <div class="humm-alert-box estado-atencion" style="margin-bottom: var(--humm-space-3);">
+      <strong>Requisito pendiente para postular:</strong> {{ item.motivo_proxima_etapa }}
+    </div>
+  {% endif %}
+
+  <!-- Grid informativo de la tarjeta -->
+  <div class="humm-fund-details-grid">
+    <div class="humm-detail-block">
+      <strong>Para quién es</strong>
+      <p>{{ item.instrumento.dirigido_a|default:"Emprendedores y negocios según bases."|truncatewords:20 }}</p>
+    </div>
+
+    <div class="humm-detail-block">
+      <strong>Qué financia</strong>
+      <p>{{ item.instrumento.que_financia|default:"Inversión y operación según bases."|truncatewords:20 }}</p>
+    </div>
+
+    <div class="humm-detail-block">
+      <strong>Cuánto aporta el fondo</strong>
+      <p>
+        {% if item.convocatoria_principal and item.convocatoria_principal.monto_max %}
+          Hasta {{ item.convocatoria_principal.monto_max|format_money:item.convocatoria_principal.moneda }}
+        {% elif item.instrumento.monto_max %}
+          Hasta {{ item.instrumento.monto_max|format_money:item.instrumento.moneda }}
+        {% else %}
+          Monto según bases
+        {% endif %}
+        {% if item.nota_monto %}
+          <span style="display: block; font-size: var(--humm-font-size-xs); color: var(--humm-text-muted);">{{ item.nota_monto }}</span>
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="humm-detail-block">
+      <strong>Aporte propio requerido</strong>
+      <p>
+        {% if item.instrumento.aporte_pct is not None %}
+          {{ item.instrumento.aporte_pct }}% (calculado sobre {{ item.instrumento.get_aporte_base_display|lower }})
+        {% elif item.instrumento.aporte_descripcion %}
+          {{ item.instrumento.aporte_descripcion }}
+        {% else %}
+          Confirmar porcentaje en bases
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- Qué falta confirmar (hasta 2 prioritarias) -->
+  {% if item.condiciones_pendientes %}
+    <div style="margin-bottom: var(--humm-space-4); font-size: var(--humm-font-size-xs);">
+      <strong style="color: var(--humm-warning-text); display: block; margin-bottom: 2px;">Antes de postular, confirma:</strong>
+      <ul style="padding-left: 18px; color: var(--humm-text-secondary);">
+        {% for c in item.condiciones_pendientes %}
+          <li>{{ c }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <!-- Estado de verificación de fuentes -->
+  <div style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); margin-bottom: var(--humm-space-4);">
+    {% if item.convocatoria_principal and item.convocatoria_principal.estado_calculado.fecha_referencia %}
+      Estado oficial revisado el {{ item.convocatoria_principal.estado_calculado.fecha_referencia|date:"d-m-Y" }}
+    {% elif item.vigencia_info %}
+      {{ item.vigencia_info.mensaje }}
+    {% endif %}
+  </div>
+
+  <!-- Acción ver instrumento -->
+  <div style="display: flex; gap: var(--humm-space-3); flex-wrap: wrap;">
+    <button type="button" class="humm-btn-primary" data-open-dialog="dialog-ficha-{{ item.instrumento.instrumento_id }}" style="width: auto;">
+      Ver ficha completa
+    </button>
+    {% if item.convocatoria_principal and item.convocatoria_principal.url %}
+      <a href="{{ item.convocatoria_principal.url }}" target="_blank" rel="noopener noreferrer" class="humm-btn-secondary">
+        <span>Ir a convocatoria oficial</span>
+        <span aria-hidden="true" style="font-size: 0.75rem;">&#x2197;</span>
+      </a>
+    {% elif item.instrumento.url_programa %}
+      <a href="{{ item.instrumento.url_programa }}" target="_blank" rel="noopener noreferrer" class="humm-btn-secondary">
+        <span>Ver programa oficial</span>
+        <span aria-hidden="true" style="font-size: 0.75rem;">&#x2197;</span>
+      </a>
+    {% endif %}
+  </div>
+</article>
+
+<!-- Modal Ficha Completa del Instrumento -->
+<dialog id="dialog-ficha-{{ item.instrumento.instrumento_id }}" class="humm-dialog" aria-labelledby="ficha-title-{{ item.instrumento.instrumento_id }}">
+  <div class="humm-dialog-header">
+    <div>
+      <span class="humm-entity-badge">{{ item.instrumento.entidad.nombre }}</span>
+      <h2 id="ficha-title-{{ item.instrumento.instrumento_id }}" style="font-size: var(--humm-font-size-lg); color: var(--humm-text-primary); margin-top: 4px;">
+        {{ item.instrumento.nombre }}
+      </h2>
+    </div>
+    <button type="button" class="humm-dialog-close" data-close-dialog aria-label="Cerrar ficha">&times;</button>
+  </div>
+  
+  <div class="humm-dialog-body">
+    
+    {% if item.convocatoria_principal %}
+      <div style="background: #F8FAF9; border: 1px solid var(--humm-border); border-radius: var(--humm-radius-md); padding: var(--humm-space-3); margin-bottom: var(--humm-space-4);">
+        <strong style="display: block; font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); text-transform: uppercase;">Convocatoria evaluada</strong>
+        <span style="font-weight: 600; color: var(--humm-text-primary);">{{ item.convocatoria_principal.nombre }}</span>
+        <div style="margin-top: 6px;">
+          <span class="humm-status-badge {{ item.convocatoria_principal.estado_calculado.clase_css }}">
+            {{ item.convocatoria_principal.estado_calculado.etiqueta }}
+          </span>
+          <p style="font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary); margin-top: 4px;">
+            {{ item.convocatoria_principal.estado_calculado.explicacion }}
+          </p>
+        </div>
+      </div>
+    {% endif %}
+
+    <div style="margin-bottom: var(--humm-space-4);">
+      <h3 style="font-size: var(--humm-font-size-sm); text-transform: uppercase; color: var(--humm-action); font-weight: 700; margin-bottom: 4px;">Descripción y Objetivo</h3>
+      <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-primary);">{{ item.instrumento.dirigido_a|default:item.instrumento.resumen }}</p>
+    </div>
+
+    <div style="margin-bottom: var(--humm-space-4);">
+      <h3 style="font-size: var(--humm-font-size-sm); text-transform: uppercase; color: var(--humm-action); font-weight: 700; margin-bottom: 4px;">¿Qué financia?</h3>
+      <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-primary);">{{ item.instrumento.que_financia|default:"Ver detalles en las bases oficiales del llamado." }}</p>
+    </div>
+
+    {% if item.instrumento.que_no_financia %}
+      <div style="margin-bottom: var(--humm-space-4);">
+        <h3 style="font-size: var(--humm-font-size-sm); text-transform: uppercase; color: #9B1C1C; font-weight: 700; margin-bottom: 4px;">¿Qué NO financia / Exclusiones?</h3>
+        <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary);">{{ item.instrumento.que_no_financia }}</p>
+      </div>
+    {% endif %}
+
+    <div style="margin-bottom: var(--humm-space-4);">
+      <h3 style="font-size: var(--humm-font-size-sm); text-transform: uppercase; color: var(--humm-action); font-weight: 700; margin-bottom: 4px;">Condiciones de Financiamiento</h3>
+      <ul style="padding-left: 18px; font-size: var(--humm-font-size-sm); color: var(--humm-text-primary);">
+        <li><strong>Monto máximo del fondo:</strong> 
+          {% if item.convocatoria_principal and item.convocatoria_principal.monto_max %}
+            {{ item.convocatoria_principal.monto_max|format_money:item.convocatoria_principal.moneda }}
+          {% else %}
+            {{ item.instrumento.monto_max|format_money:item.instrumento.moneda }}
+          {% endif %}
+        </li>
+        <li><strong>Tipo de apoyo:</strong> {{ item.instrumento.get_tipo_beneficio_display }} (No reembolsable: {{ item.instrumento.get_no_reembolsable_confirmado_display }})</li>
+        <li><strong>Modalidad de entrega:</strong> {{ item.instrumento.get_modalidad_entrega_display }}</li>
+        <li><strong>Aporte del postulante:</strong> 
+          {% if item.instrumento.aporte_pct is not None %}
+            {{ item.instrumento.aporte_pct }}% calculado sobre {{ item.instrumento.get_aporte_base_display|lower }}.
+          {% endif %}
+          {{ item.instrumento.aporte_descripcion }}
+        </li>
+      </ul>
+    </div>
+
+    {% if item.todas_condiciones_pendientes %}
+      <div class="humm-alert-box estado-atencion" style="margin-bottom: var(--humm-space-4);">
+        <strong>Condiciones clave a confirmar antes de postular:</strong>
+        <ul style="padding-left: 18px; margin-top: 4px;">
+          {% for c in item.todas_condiciones_pendientes %}
+            <li>{{ c }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div style="border-top: 1px solid var(--humm-border); padding-top: var(--humm-space-4); margin-top: var(--humm-space-4); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <span style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted);">
+        ID catálogo: {{ item.instrumento.instrumento_id }}
+      </span>
+      {% if item.convocatoria_principal and item.convocatoria_principal.url %}
+        <a href="{{ item.convocatoria_principal.url }}" target="_blank" rel="noopener noreferrer" class="humm-btn-primary" style="width: auto;">
+          <span>Ir a la convocatoria oficial (abre pestaña nueva)</span>
+          <span aria-hidden="true">&#x2197;</span>
+        </a>
+      {% elif item.instrumento.url_programa %}
+        <a href="{{ item.instrumento.url_programa }}" target="_blank" rel="noopener noreferrer" class="humm-btn-primary" style="width: auto;">
+          <span>Ver programa oficial (abre pestaña nueva)</span>
+          <span aria-hidden="true">&#x2197;</span>
+        </a>
+      {% endif %}
+    </div>
+
+  </div>
+</dialog>

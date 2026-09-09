@@ -1,0 +1,94 @@
+{% extends "admin_humm/base_admin.html" %}
+
+{% block title %}Configuración General — Humm{% endblock %}
+
+{% block admin_content %}
+<div style="max-width: 800px;">
+
+  <div style="margin-bottom: var(--humm-space-6);">
+    <h1 class="humm-hero-title" style="font-size: var(--humm-font-size-xl); margin-bottom: 4px;">
+      Configuración de la Plataforma
+    </h1>
+    <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary);">
+      Ajusta los parámetros globales de integración con Comunidad Humm, canales de contacto y políticas de vigencia editorial.
+    </p>
+  </div>
+
+  <form method="POST" class="humm-step-card">
+    {% csrf_token %}
+
+    <div style="margin-bottom: var(--humm-space-4);">
+      <label for="id_nombre" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+        Nombre visible de la plataforma
+      </label>
+      <input type="text" id="id_nombre" name="nombre_plataforma" value="{{ config.nombre_plataforma }}" class="humm-select" required>
+      <small style="color: var(--humm-text-muted);">Aparece en la cabecera, títulos de página y metadatos.</small>
+    </div>
+
+    <div style="margin-bottom: var(--humm-space-4);">
+      <label for="id_retorno" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+        URL de retorno a Comunidad Humm
+      </label>
+      <input type="url" id="id_retorno" name="url_retorno_comunidad" value="{{ config.url_retorno_comunidad }}" class="humm-select" required>
+      <small style="color: var(--humm-text-muted);">Destino del botón "Volver a Comunidad Humm".</small>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--humm-space-4); margin-bottom: var(--humm-space-4);">
+      <div>
+        <label for="id_email" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Correo de contacto Humm
+        </label>
+        <input type="email" id="id_email" name="contacto_email" value="{{ config.contacto_email }}" class="humm-select" required>
+      </div>
+
+      <div>
+        <label for="id_ws" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          WhatsApp de contacto
+        </label>
+        <input type="text" id="id_ws" name="contacto_whatsapp" value="{{ config.contacto_whatsapp }}" class="humm-select" required>
+      </div>
+    </div>
+
+    <div style="margin-bottom: var(--humm-space-4);">
+      <label for="id_canal" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+        Canales activos para solicitud de apoyo
+      </label>
+      <select id="id_canal" name="canal_activo" class="humm-select">
+        <option value="ambos" {% if config.canal_activo == 'ambos' %}selected{% endif %}>Correo y WhatsApp</option>
+        <option value="whatsapp" {% if config.canal_activo == 'whatsapp' %}selected{% endif %}>Solo WhatsApp</option>
+        <option value="email" {% if config.canal_activo == 'email' %}selected{% endif %}>Solo Correo</option>
+        <option value="ninguno" {% if config.canal_activo == 'ninguno' %}selected{% endif %}>Deshabilitado temporalmente</option>
+      </select>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid var(--humm-border); margin: var(--humm-space-5) 0;">
+
+    <h3 style="font-size: var(--humm-font-size-md); color: var(--humm-action); margin-bottom: var(--humm-space-3);">
+      Políticas de Revisión Editorial (Sección 10)
+    </h3>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--humm-space-4); margin-bottom: var(--humm-space-5);">
+      <div>
+        <label for="id_dias_abierta" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Días para revisar convocatorias abiertas
+        </label>
+        <input type="number" id="id_dias_abierta" name="dias_revision_abierta" value="{{ config.dias_revision_abierta }}" class="humm-select" min="1" max="90" required>
+        <small style="color: var(--humm-text-muted);">Recomendado: 7 días.</small>
+      </div>
+
+      <div>
+        <label for="id_dias_inst" style="display: block; font-size: var(--humm-font-size-sm); font-weight: 600; margin-bottom: 4px;">
+          Días para revisar instrumentos
+        </label>
+        <input type="number" id="id_dias_inst" name="dias_revision_instrumento" value="{{ config.dias_revision_instrumento }}" class="humm-select" min="15" max="365" required>
+        <small style="color: var(--humm-text-muted);">Recomendado: 90 días.</small>
+      </div>
+    </div>
+
+    <button type="submit" class="humm-btn-primary" style="width: auto; padding: 12px 32px;">
+      Guardar configuración
+    </button>
+  </form>
+
+</div>
+{% endblock %}

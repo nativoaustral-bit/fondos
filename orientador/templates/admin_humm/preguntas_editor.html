@@ -1,0 +1,77 @@
+{% extends "admin_humm/base_admin.html" %}
+
+{% block title %}Preguntas y Orientación — Administración Humm{% endblock %}
+
+{% block admin_content %}
+<div>
+
+  <div style="margin-bottom: var(--humm-space-6);">
+    <h1 class="humm-hero-title" style="font-size: var(--humm-font-size-xl); margin-bottom: 4px;">
+      Editor de Preguntas y Cuestionario
+    </h1>
+    <p style="font-size: var(--humm-font-size-sm); color: var(--humm-text-secondary);">
+      Modifica los títulos, textos de ayuda y etiquetas visibles de las 5 preguntas oficiales. Las claves internas y códigos territoriales son estables.
+    </p>
+  </div>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    {% for p in preguntas %}
+      <div class="humm-step-card" style="margin-bottom: var(--humm-space-6);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--humm-space-3);">
+          <span class="humm-step-number">Pregunta {{ p.orden }} · Clave: <code>{{ p.clave }}</code></span>
+          <label style="font-size: var(--humm-font-size-xs); display: flex; align-items: center; gap: 6px;">
+            <input type="checkbox" name="activa_{{ p.id }}" {% if p.activa %}checked{% endif %}>
+            <strong>Pregunta Activa</strong>
+          </label>
+        </div>
+
+        <div style="margin-bottom: var(--humm-space-3);">
+          <label style="display: block; font-size: var(--humm-font-size-xs); font-weight: 600; text-transform: uppercase; color: var(--humm-text-secondary); margin-bottom: 2px;">
+            Título visible
+          </label>
+          <input type="text" name="titulo_{{ p.id }}" value="{{ p.titulo }}" class="humm-select" required>
+        </div>
+
+        <div style="margin-bottom: var(--humm-space-4);">
+          <label style="display: block; font-size: var(--humm-font-size-xs); font-weight: 600; text-transform: uppercase; color: var(--humm-text-secondary); margin-bottom: 2px;">
+            Texto de ayuda o instrucción
+          </label>
+          <input type="text" name="ayuda_{{ p.id }}" value="{{ p.ayuda }}" class="humm-select">
+        </div>
+
+        <div style="border-top: 1px solid var(--humm-border); padding-top: var(--humm-space-3);">
+          <strong style="font-size: var(--humm-font-size-xs); color: var(--humm-text-secondary); text-transform: uppercase; display: block; margin-bottom: 8px;">
+            Opciones configuradas ({{ p.opciones.count }})
+          </strong>
+
+          <div style="display: grid; gap: var(--humm-space-2);">
+            {% for op in p.opciones.all %}
+              <div style="display: flex; align-items: center; gap: var(--humm-space-3); background: #FAFBF9; border: 1px solid var(--humm-border); padding: 8px 12px; border-radius: var(--humm-radius-sm);">
+                <span style="font-size: var(--humm-font-size-xs); color: var(--humm-text-muted); width: 90px; font-family: monospace;">{{ op.codigo }}</span>
+                <input type="text" name="op_etiqueta_{{ op.id }}" value="{{ op.etiqueta }}" class="humm-select" style="min-height: 34px; padding: 4px 8px; flex: 1;" placeholder="Etiqueta visible">
+                {% if op.descripcion_auxiliar %}
+                  <input type="text" name="op_desc_{{ op.id }}" value="{{ op.descripcion_auxiliar }}" class="humm-select" style="min-height: 34px; padding: 4px 8px; flex: 1.2;" placeholder="Texto secundario">
+                {% endif %}
+                <label style="font-size: var(--humm-font-size-xs); display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                  <input type="checkbox" name="op_activa_{{ op.id }}" {% if op.activa %}checked{% endif %}>
+                  Habilitada
+                </label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    {% endfor %}
+
+    <div style="margin-top: var(--humm-space-6); text-align: right;">
+      <button type="submit" class="humm-btn-primary" style="width: auto; padding: 12px 32px;">
+        Guardar cambios en cuestionario
+      </button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

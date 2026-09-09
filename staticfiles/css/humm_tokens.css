@@ -1,0 +1,78 @@
+/* ==========================================================================
+   Humm Design System — Tokens y Variables Oficiales
+   WCAG 2.2 AA Compatible — Paleta de Marca Humm 2026
+   ========================================================================== */
+
+:root {
+  /* Paleta primaria Humm */
+  --humm-bg-main: #F7F8F4;         /* Marfil suave de fondo principal */
+  --humm-surface: #FFFFFF;         /* Blanco puro para tarjetas y superficies */
+  --humm-text-primary: #203B36;    /* Verde oscuro para títulos y texto principal (contraste > 7:1) */
+  --humm-text-secondary: #52665F;  /* Gris verdoso para texto secundario (contraste > 4.5:1) */
+  --humm-text-muted: #6B7F78;      /* Gris verdoso atenuado para notas auxiliares */
+  --humm-action: #245C50;          /* Verde petróleo para botones y llamados a la acción */
+  --humm-action-hover: #1A453C;    /* Verde petróleo profundo para hover */
+  --humm-action-light: #EBF3EF;    /* Verde petróleo sutil */
+  --humm-selection-bg: #E4EEE7;    /* Salvia claro para tarjetas u opciones seleccionadas */
+  --humm-border: #D5DFD8;          /* Gris claro sutil para bordes */
+  --humm-border-focus: #245C50;    /* Verde petróleo para foco visible */
+  
+  /* Estados informativos y semánticos */
+  --humm-warning-bg: #FFF1D5;      /* Ámbar suave para avisos y vigencia por confirmar */
+  --humm-warning-text: #614200;    /* Marrón ámbar oscuro para texto legible */
+  --humm-warning-border: #FFE099;
+  
+  --humm-success-bg: #E3F5EC;      /* Verde suave para convocatorias abiertas */
+  --humm-success-text: #135738;
+  --humm-success-border: #B7E4CD;
+  
+  --humm-danger-bg: #FDE8E8;       /* Rojo suave para convocatorias cerradas / canceladas */
+  --humm-danger-text: #9B1C1C;
+  --humm-danger-border: #F8B4B4;
+
+  --humm-neutral-bg: #ECEFEA;      /* Gris neutro para estados anunciados */
+  --humm-neutral-text: #394A44;
+
+  /* Tipografía */
+  --humm-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --humm-font-size-xs: 0.8125rem;  /* 13px */
+  --humm-font-size-sm: 0.875rem;   /* 14px */
+  --humm-font-size-base: 1rem;     /* 16px */
+  --humm-font-size-md: 1.125rem;   /* 18px */
+  --humm-font-size-lg: 1.25rem;    /* 20px */
+  --humm-font-size-xl: 1.5rem;     /* 24px */
+  --humm-font-size-2xl: 1.875rem;  /* 30px */
+
+  /* Espaciado */
+  --humm-space-1: 0.25rem;  /* 4px */
+  --humm-space-2: 0.5rem;   /* 8px */
+  --humm-space-3: 0.75rem;  /* 12px */
+  --humm-space-4: 1rem;     /* 16px */
+  --humm-space-5: 1.25rem;  /* 20px */
+  --humm-space-6: 1.5rem;   /* 24px */
+  --humm-space-8: 2rem;     /* 32px */
+  --humm-space-10: 2.5rem;  /* 40px */
+  --humm-space-12: 3rem;    /* 48px */
+
+  /* Bordes y Sombras */
+  --humm-radius-sm: 6px;
+  --humm-radius-md: 10px;
+  --humm-radius-lg: 16px;
+  --humm-radius-full: 9999px;
+
+  --humm-shadow-sm: 0 1px 3px rgba(32, 59, 54, 0.05);
+  --humm-shadow-md: 0 4px 12px rgba(32, 59, 54, 0.08);
+  --humm-shadow-lg: 0 10px 25px rgba(32, 59, 54, 0.12);
+
+  /* Accesibilidad y Transiciones */
+  --humm-touch-target: 44px; /* WCAG 2.2 Target Size */
+  --humm-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

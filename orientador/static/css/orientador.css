@@ -1,0 +1,565 @@
+/* ==========================================================================
+   Humm Financiamiento — Estilos Públicos Mobile-First y Responsivos
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--humm-font-family);
+  background-color: var(--humm-bg-main);
+  color: var(--humm-text-primary);
+  font-size: var(--humm-font-size-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Enlaces y foco accesible */
+a {
+  color: var(--humm-action);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: var(--humm-transition);
+}
+
+a:hover, a:focus {
+  color: var(--humm-action-hover);
+}
+
+:focus-visible {
+  outline: 3px solid var(--humm-border-focus);
+  outline-offset: 2px;
+}
+
+/* Cabecera común */
+.humm-header {
+  background-color: var(--humm-surface);
+  border-bottom: 1px solid var(--humm-border);
+  padding: var(--humm-space-3) var(--humm-space-4);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.humm-header-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--humm-space-3);
+}
+
+.humm-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--humm-space-2);
+  text-decoration: none;
+  color: var(--humm-text-primary);
+  font-weight: 700;
+  font-size: var(--humm-font-size-md);
+}
+
+.humm-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--humm-radius-sm);
+  background: var(--humm-action);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.humm-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--humm-space-1);
+  font-size: var(--humm-font-size-sm);
+  color: var(--humm-text-secondary);
+  text-decoration: none;
+  padding: var(--humm-space-2) var(--humm-space-3);
+  border-radius: var(--humm-radius-sm);
+  border: 1px solid var(--humm-border);
+  min-height: var(--humm-touch-target);
+  font-weight: 500;
+}
+
+.humm-back-link:hover {
+  background-color: var(--humm-selection-bg);
+  color: var(--humm-text-primary);
+  border-color: var(--humm-action);
+}
+
+/* Contenedor principal */
+.humm-main {
+  flex: 1;
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--humm-space-6) var(--humm-space-4) var(--humm-space-12);
+}
+
+/* Portada y título */
+.humm-hero {
+  text-align: left;
+  margin-bottom: var(--humm-space-8);
+}
+
+.humm-hero-badge {
+  display: inline-block;
+  background-color: var(--humm-selection-bg);
+  color: var(--humm-action);
+  font-size: var(--humm-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: var(--humm-radius-full);
+  margin-bottom: var(--humm-space-2);
+}
+
+.humm-hero-title {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--humm-text-primary);
+  margin-bottom: var(--humm-space-2);
+}
+
+.humm-hero-desc {
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+  color: var(--humm-text-secondary);
+  max-width: 680px;
+}
+
+/* Formulario de 5 preguntas */
+.humm-form-wrapper {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.humm-step-card {
+  background-color: var(--humm-surface);
+  border: 1px solid var(--humm-border);
+  border-radius: var(--humm-radius-lg);
+  padding: var(--humm-space-5);
+  margin-bottom: var(--humm-space-6);
+  box-shadow: var(--humm-shadow-sm);
+}
+
+.humm-step-header {
+  margin-bottom: var(--humm-space-4);
+}
+
+.humm-step-number {
+  font-size: var(--humm-font-size-xs);
+  font-weight: 700;
+  color: var(--humm-action);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.humm-step-title {
+  font-size: var(--humm-font-size-lg);
+  font-weight: 600;
+  color: var(--humm-text-primary);
+  margin-top: 2px;
+}
+
+.humm-step-help {
+  font-size: var(--humm-font-size-sm);
+  color: var(--humm-text-secondary);
+  margin-top: 4px;
+}
+
+/* Opciones de selección (Radio y Checkbox grandes y cómodos) */
+.humm-options-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--humm-space-3);
+}
+
+.humm-option-label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--humm-space-3);
+  padding: var(--humm-space-3) var(--humm-space-4);
+  border: 1.5px solid var(--humm-border);
+  border-radius: var(--humm-radius-md);
+  cursor: pointer;
+  background-color: var(--humm-surface);
+  transition: var(--humm-transition);
+  min-height: var(--humm-touch-target);
+  user-select: none;
+}
+
+.humm-option-label:hover {
+  border-color: var(--humm-action);
+  background-color: #FAFBF9;
+}
+
+.humm-option-label.is-selected {
+  border-color: var(--humm-action);
+  background-color: var(--humm-selection-bg);
+}
+
+.humm-option-input {
+  margin-top: 3px;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--humm-action);
+  flex-shrink: 0;
+}
+
+.humm-option-content {
+  flex: 1;
+}
+
+.humm-option-title {
+  font-weight: 600;
+  color: var(--humm-text-primary);
+  font-size: var(--humm-font-size-base);
+}
+
+.humm-option-desc {
+  font-size: var(--humm-font-size-xs);
+  color: var(--humm-text-secondary);
+  margin-top: 2px;
+}
+
+/* Selector accesible para región */
+.humm-select {
+  width: 100%;
+  min-height: var(--humm-touch-target);
+  padding: var(--humm-space-3) var(--humm-space-4);
+  font-size: var(--humm-font-size-base);
+  font-family: inherit;
+  color: var(--humm-text-primary);
+  background-color: var(--humm-surface);
+  border: 1.5px solid var(--humm-border);
+  border-radius: var(--humm-radius-md);
+  cursor: pointer;
+  appearance: auto;
+}
+
+.humm-select:focus {
+  border-color: var(--humm-action);
+}
+
+/* Botón principal */
+.humm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--humm-space-2);
+  width: 100%;
+  min-height: 52px;
+  background-color: var(--humm-action);
+  color: #FFFFFF;
+  font-size: var(--humm-font-size-md);
+  font-weight: 600;
+  border: none;
+  border-radius: var(--humm-radius-md);
+  cursor: pointer;
+  box-shadow: var(--humm-shadow-md);
+  transition: var(--humm-transition);
+  text-decoration: none;
+  padding: var(--humm-space-3) var(--humm-space-6);
+}
+
+.humm-btn-primary:hover {
+  background-color: var(--humm-action-hover);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.humm-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--humm-space-2);
+  min-height: var(--humm-touch-target);
+  background-color: transparent;
+  color: var(--humm-action);
+  font-size: var(--humm-font-size-sm);
+  font-weight: 600;
+  border: 1.5px solid var(--humm-action);
+  border-radius: var(--humm-radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  padding: var(--humm-space-2) var(--humm-space-4);
+  transition: var(--humm-transition);
+}
+
+.humm-btn-secondary:hover {
+  background-color: var(--humm-selection-bg);
+}
+
+/* Resultados Layout */
+.humm-results-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--humm-space-8);
+}
+
+@media (min-width: 900px) {
+  .humm-results-layout {
+    grid-template-columns: 1fr 340px;
+    align-items: start;
+  }
+}
+
+/* Tarjeta de Resumen de Perfil */
+.humm-profile-summary {
+  background-color: var(--humm-surface);
+  border: 1px solid var(--humm-border);
+  border-radius: var(--humm-radius-lg);
+  padding: var(--humm-space-5);
+  box-shadow: var(--humm-shadow-sm);
+}
+
+.humm-profile-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--humm-space-4);
+}
+
+.humm-profile-item {
+  margin-bottom: var(--humm-space-3);
+}
+
+.humm-profile-label {
+  font-size: var(--humm-font-size-xs);
+  color: var(--humm-text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.humm-profile-val {
+  font-size: var(--humm-font-size-sm);
+  color: var(--humm-text-primary);
+  font-weight: 500;
+}
+
+/* Tarjeta de Instrumento */
+.humm-fund-card {
+  background-color: var(--humm-surface);
+  border: 1px solid var(--humm-border);
+  border-radius: var(--humm-radius-lg);
+  padding: var(--humm-space-6);
+  margin-bottom: var(--humm-space-5);
+  box-shadow: var(--humm-shadow-sm);
+  transition: var(--humm-transition);
+}
+
+.humm-fund-card:hover {
+  box-shadow: var(--humm-shadow-md);
+  border-color: #B2C5BC;
+}
+
+.humm-fund-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--humm-space-2);
+  margin-bottom: var(--humm-space-2);
+}
+
+.humm-entity-badge {
+  display: inline-block;
+  font-size: var(--humm-font-size-xs);
+  font-weight: 700;
+  color: var(--humm-action);
+  background: var(--humm-selection-bg);
+  padding: 3px 8px;
+  border-radius: var(--humm-radius-sm);
+}
+
+.humm-fund-title {
+  font-size: var(--humm-font-size-xl);
+  font-weight: 700;
+  color: var(--humm-text-primary);
+  margin-bottom: var(--humm-space-2);
+}
+
+/* Razón de aparición */
+.humm-match-reason {
+  background-color: var(--humm-selection-bg);
+  border-left: 3px solid var(--humm-action);
+  padding: var(--humm-space-3) var(--humm-space-4);
+  border-radius: 0 var(--humm-radius-sm) var(--humm-radius-sm) 0;
+  font-size: var(--humm-font-size-sm);
+  color: var(--humm-text-primary);
+  margin-bottom: var(--humm-space-4);
+}
+
+/* Grid de detalles de la tarjeta */
+.humm-fund-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--humm-space-3);
+  margin-bottom: var(--humm-space-4);
+  font-size: var(--humm-font-size-sm);
+}
+
+@media (min-width: 600px) {
+  .humm-fund-details-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.humm-detail-block strong {
+  display: block;
+  font-size: var(--humm-font-size-xs);
+  color: var(--humm-text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* Badges de estado de convocatoria */
+.humm-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--humm-radius-full);
+  font-size: var(--humm-font-size-xs);
+  font-weight: 600;
+}
+
+.estado-abierta {
+  background-color: var(--humm-success-bg);
+  color: var(--humm-success-text);
+  border: 1px solid var(--humm-success-border);
+}
+
+.estado-atencion {
+  background-color: var(--humm-warning-bg);
+  color: var(--humm-warning-text);
+  border: 1px solid var(--humm-warning-border);
+}
+
+.estado-cerrada {
+  background-color: var(--humm-danger-bg);
+  color: var(--humm-danger-text);
+  border: 1px solid var(--humm-danger-border);
+}
+
+.estado-anunciada {
+  background-color: var(--humm-neutral-bg);
+  color: var(--humm-neutral-text);
+}
+
+.estado-suspendida, .estado-cancelada {
+  background-color: #F8D7DA;
+  color: #721C24;
+}
+
+/* Avisos que requieren confirmación */
+.humm-alert-box {
+  background-color: var(--humm-warning-bg);
+  border: 1px solid var(--humm-warning-border);
+  color: var(--humm-warning-text);
+  padding: var(--humm-space-3) var(--humm-space-4);
+  border-radius: var(--humm-radius-md);
+  font-size: var(--humm-font-size-sm);
+  margin-bottom: var(--humm-space-4);
+}
+
+.humm-alert-box strong {
+  font-weight: 700;
+}
+
+/* Siguiente paso box */
+.humm-next-step-box {
+  background-color: var(--humm-surface);
+  border: 2px solid var(--humm-action);
+  border-radius: var(--humm-radius-lg);
+  padding: var(--humm-space-6);
+  margin-top: var(--humm-space-8);
+  box-shadow: var(--humm-shadow-sm);
+}
+
+.humm-next-step-badge {
+  display: inline-block;
+  background-color: var(--humm-action);
+  color: #FFFFFF;
+  font-size: var(--humm-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--humm-radius-sm);
+  margin-bottom: var(--humm-space-2);
+}
+
+.humm-next-step-tasks {
+  margin-top: var(--humm-space-3);
+  padding-left: var(--humm-space-5);
+}
+
+.humm-next-step-tasks li {
+  margin-bottom: var(--humm-space-2);
+  color: var(--humm-text-primary);
+}
+
+/* Diálogos y Modales nativos accesibles */
+dialog.humm-dialog {
+  margin: auto;
+  padding: 0;
+  max-width: 680px;
+  width: 92%;
+  border: 1px solid var(--humm-border);
+  border-radius: var(--humm-radius-lg);
+  box-shadow: var(--humm-shadow-lg);
+  background-color: var(--humm-surface);
+}
+
+dialog.humm-dialog::backdrop {
+  background-color: rgba(32, 59, 54, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.humm-dialog-header {
+  padding: var(--humm-space-4) var(--humm-space-6);
+  border-bottom: 1px solid var(--humm-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.humm-dialog-body {
+  padding: var(--humm-space-6);
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.humm-dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--humm-text-secondary);
+  cursor: pointer;
+  padding: var(--humm-space-1);
+}
+
+/* Pie de página */
+.humm-footer {
+  border-top: 1px solid var(--humm-border);
+  padding: var(--humm-space-6) var(--humm-space-4);
+  text-align: center;
+  font-size: var(--humm-font-size-xs);
+  color: var(--humm-text-muted);
+  background-color: var(--humm-surface);
+}

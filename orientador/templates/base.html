@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Orientador de Financiamiento Humm — Encuentra fondos concursables, subsidios y apoyos no reembolsables en Chile para tu emprendimiento.">
+  <title>{% block title %}{{ humm_config.nombre_plataforma|default:"Humm Financiamiento" }}{% endblock %}</title>
+  
+  <link rel="stylesheet" href="{% static 'css/humm_tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/orientador.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Cabecera accesible con retorno a Comunidad Humm -->
+  <header class="humm-header" role="banner">
+    <div class="humm-header-inner">
+      <a href="{% url 'orientador:formulario' %}" class="humm-brand" aria-label="Inicio {{ humm_config.nombre_plataforma|default:'Humm Financiamiento' }}">
+        <span class="humm-brand-logo" aria-hidden="true">H</span>
+        <span>{{ humm_config.nombre_plataforma|default:"Humm Financiamiento" }}</span>
+      </a>
+
+      <nav aria-label="Navegación general">
+        <a href="{{ humm_config.url_retorno_comunidad|default:'https://comunidad.humm.cl/herramientas' }}" class="humm-back-link" rel="noopener">
+          <span aria-hidden="true">&larr;</span>
+          <span>Volver a Comunidad Humm</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="humm-main" id="contenido-principal" role="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Pie de página -->
+  <footer class="humm-footer" role="contentinfo">
+    <div class="humm-header-inner" style="justify-content: center; flex-direction: column; gap: 8px;">
+      <p><strong>Comunidad Humm</strong> · Orientador determinista de fondos y subsidios no reembolsables en Chile.</p>
+      <p>La información es de referencia oficial; antes de postular confirma siempre las bases vigentes en cada institución.</p>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/orientador.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
