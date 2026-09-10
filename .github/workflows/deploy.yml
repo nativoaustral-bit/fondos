@@ -1,0 +1,45 @@
+name: Deploy Humm Fondos to HostGator Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to HostGator Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Código
+        uses: actions/checkout@v4
+
+      - name: 2. Sincronizar archivos al servidor vía RSYNC
+        uses: easingthemes/ssh-deploy@v5.1.1
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-avzr"
+          SOURCE: "./"
+          REMOTE_HOST: ${{ secrets.SSH_HOST }}
+          REMOTE_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PORT: ${{ secrets.SSH_PORT }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+          EXCLUDE: "/.venv/, /venv/, /.git/, /.github/, /__pycache__/, /*.pyc, /.DS_Store, /db.sqlite3, /media/, /tmp/"
+
+      - name: 3. Ejecutar Migraciones, Estáticos y Reinicio en Servidor
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ secrets.TARGET_DIR }}
+            source venv/bin/activate
+            python manage.py migrate
+            python manage.py collectstatic --noinput
+            cp passenger_wsgi.py /home1/paulocis/fondos.humm.cl/
+            cp .htaccess /home1/paulocis/fondos.humm.cl/
+            chmod 755 passenger_wsgi.py manage.py /home1/paulocis/fondos.humm.cl/passenger_wsgi.py
+            mkdir -p /home1/paulocis/fondos.humm.cl/tmp tmp
+            touch /home1/paulocis/fondos.humm.cl/tmp/restart.txt tmp/restart.txt
