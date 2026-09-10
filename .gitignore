@@ -27,6 +27,7 @@ wheels/
 local_settings.py
 db.sqlite3-journal
 media/
+tmp/
 
 # OS
 .DS_Store
