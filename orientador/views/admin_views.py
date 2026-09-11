@@ -23,6 +23,7 @@ from ..services.excel_contract import (
 
 
 from django.contrib.auth import authenticate, login, logout
+from django.utils.http import url_has_allowed_host_and_scheme
 
 def es_administrador(user):
     """Verifica si el usuario tiene rol de staff o superuser."""
@@ -31,7 +32,13 @@ def es_administrador(user):
 
 def admin_login_view(request):
     """Pantalla de inicio de sesión con la identidad visual oficial de Humm."""
-    next_url = request.GET.get('next') or request.POST.get('next') or '/gestion/'
+    raw_next = request.GET.get('next') or request.POST.get('next') or '/gestion/'
+    allowed_hosts = {request.get_host()}
+    if url_has_allowed_host_and_scheme(url=raw_next, allowed_hosts=allowed_hosts, require_https=request.is_secure()):
+        next_url = raw_next
+    else:
+        next_url = '/gestion/'
+
     if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
         return redirect(next_url)
 

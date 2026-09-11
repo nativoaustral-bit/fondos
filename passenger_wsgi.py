@@ -1,9 +1,9 @@
-#!/home1/paulocis/public_html/FONDOS/venv/bin/python
+#!/home1/paulocis/fondos_app/venv/bin/python
 import sys, os
 
 # Add project directory to sys.path
 project_dir = os.path.dirname(os.path.abspath(__file__))
-for d in [project_dir, '/home1/paulocis/public_html/FONDOS']:
+for d in [project_dir, '/home1/paulocis/fondos_app', '/home1/paulocis/public_html/FONDOS']:
     if os.path.exists(d) and d not in sys.path:
         sys.path.insert(0, d)
 

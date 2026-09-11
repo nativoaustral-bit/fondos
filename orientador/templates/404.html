@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Página no encontrada — {{ humm_config.nombre_plataforma|default:"Humm Financiamiento" }}{% endblock %}
+
+{% block content %}
+<div class="humm-container" style="max-width: 680px; margin: 48px auto; text-align: center; padding: 32px 16px;">
+  <div class="humm-card" style="padding: 40px 24px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);">
+    <div style="font-size: 4rem; font-weight: 800; color: var(--humm-color-primary, #1e3a8a); margin-bottom: 8px;">404</div>
+    <h1 style="font-size: 1.5rem; margin-bottom: 16px; color: #1f2937;">Página no encontrada</h1>
+    <p style="font-size: 1rem; color: #4b5563; line-height: 1.6; margin-bottom: 24px;">
+      La ruta o recurso que buscas no existe o ha sido movido a otra ubicación dentro de la plataforma.
+    </p>
+    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <a href="{% url 'orientador:formulario' %}" class="humm-btn-primary" style="display: inline-block; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
+        Ir al Orientador de Fondos
+      </a>
+      <a href="{{ humm_config.url_retorno_comunidad|default:'https://comunidad.humm.cl' }}" class="humm-btn-secondary" style="display: inline-block; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
+        Volver a Comunidad Humm
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

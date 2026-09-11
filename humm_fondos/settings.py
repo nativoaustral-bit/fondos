@@ -3,25 +3,75 @@ Django settings for humm_fondos project.
 Orientador de Financiamiento Humm (Humm Fondos)
 """
 
+import json
 import os
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-^nnqhhy1zwq4)=rgf48rk7lxuqvidqc6v!17p$84h47pgz636h-humm-fondos-2026'
+# Cargar configuración privada (fuera del DocumentRoot si existe)
+def _load_private_config():
+    candidates = [
+        os.environ.get('FONDOS_CONFIG_FILE'),
+        '/home1/paulocis/private/fondos_env.json',
+        str(BASE_DIR.parent / 'private' / 'fondos_env.json'),
+        str(BASE_DIR / 'fondos_env.json'),
+        str(BASE_DIR / '.env'),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.exists(candidate):
+            try:
+                if candidate.endswith('.json'):
+                    with open(candidate, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        for k, v in data.items():
+                            if k not in os.environ and not k.startswith('_'):
+                                os.environ[k] = str(v)
+                else:
+                    with open(candidate, 'r', encoding='utf-8') as f:
+                        for line in f:
+                            line = line.strip()
+                            if line and not line.startswith('#') and '=' in line:
+                                k, v = line.split('=', 1)
+                                k = k.strip()
+                                v = v.strip().strip("'\"")
+                                if k not in os.environ:
+                                    os.environ[k] = v
+                break
+            except Exception:
+                pass
+
+_load_private_config()
+
+# Producción por defecto: DEBUG siempre es False salvo indicación explícita
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
+
+import sys
+
+IS_TESTING = (
+    'test' in sys.argv or
+    any('pytest' in arg for arg in sys.argv) or
+    'PYTEST_CURRENT_TEST' in os.environ or
+    os.environ.get('DJANGO_TESTING') == '1'
 )
 
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+# SECRET_KEY criptográfica: obligatoria en producción
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG or IS_TESTING:
+        SECRET_KEY = 'test-runner-only-secret-key-local-suite-humm-fondos-2026'
+    else:
+        raise ImproperlyConfigured("SECRET_KEY no configurada en entorno de producción.")
+elif not DEBUG and not IS_TESTING and (SECRET_KEY.startswith('django-insecure-') or len(SECRET_KEY) < 40):
+    raise ImproperlyConfigured("SECRET_KEY insegura detectada en entorno de producción.")
 
 ALLOWED_HOSTS = [
     h.strip()
     for h in os.environ.get(
         'ALLOWED_HOSTS',
-        'localhost,127.0.0.1,testserver,.humm.cl'
+        'fondos.humm.cl,humm.cl,localhost,127.0.0.1,testserver'
     ).split(',')
     if h.strip()
 ]
@@ -89,10 +139,11 @@ if DB_ENGINE == 'mysql':
         }
     }
 else:
+    DB_PATH = os.environ.get('DB_PATH')
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': Path(DB_PATH) if DB_PATH else (BASE_DIR / 'db.sqlite3'),
             'OPTIONS': {
                 'timeout': 20,
             }
@@ -150,3 +201,12 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Security Cookies & Headers (OWASP / HostGator HTTPS)
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+

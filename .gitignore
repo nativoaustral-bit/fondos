@@ -22,12 +22,24 @@ wheels/
 .installed.cfg
 *.egg
 
-# Django
+# Django & Database
 *.log
 local_settings.py
-db.sqlite3-journal
+db.sqlite3
+db.sqlite3*
+*.sqlite3
+*.sqlite3-*
 media/
 tmp/
+
+# Secrets & Local Config
+.env
+*.env
+*secrets*
+fondos_env.json
+.backups_containment/
+backups/
+*.sha256
 
 # OS
 .DS_Store

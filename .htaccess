@@ -4,11 +4,57 @@ DirectoryIndex passenger_wsgi.py
 
 RewriteEngine On
 
-# Permitir acceso directo a archivos estáticos y multimedia sin pasar por Django
-RewriteCond %{REQUEST_URI} ^/(static|staticfiles|media)/ [NC,OR]
+# ------------------------------------------------------------------------------
+# 1. BLOQUEO PERIMETRAL DE ARCHIVOS SENSIBLES Y PRIVADOS (403 Forbidden)
+# ------------------------------------------------------------------------------
+<FilesMatch "(^\.|\.(sqlite3|sqlite3-.*|env|sh|log|bak|backup|sql|md|xlsx|ini|conf|json|yml|yaml)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Bloquear código Python salvo el despachador WSGI
+<FilesMatch "\.py$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<Files "passenger_wsgi.py">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Allow from all
+    </IfModule>
+</Files>
+
+# Bloqueo adicional vía mod_rewrite para directorios ocultos (.git) y patrones sensibles
+RewriteRule ^\.git(/.*)?$ - [F,L]
+RewriteRule ^deploy\.sh$ - [F,L]
+RewriteRule \.sqlite3.*$ - [F,L]
+
+# ------------------------------------------------------------------------------
+# 2. ACCESO A CONTENIDO ESTÁTICO Y MULTIMEDIA
+# ------------------------------------------------------------------------------
+# Permitir acceso directo ÚNICAMENTE a las rutas de assets estáticos y media
+RewriteCond %{REQUEST_URI} ^/(static|staticfiles|media)/ [NC]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
+# ------------------------------------------------------------------------------
+# 3. ENCAMINAMIENTO HACIA PASSENGER / DJANGO
+# ------------------------------------------------------------------------------
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ passenger_wsgi.py/$1 [QSA,L]
+

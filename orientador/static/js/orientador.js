@@ -162,7 +162,13 @@ function initSolicitudApoyo() {
       if (data.ok) {
         if (feedbackEl) {
           feedbackEl.className = 'humm-alert-box estado-abierta';
-          feedbackEl.innerHTML = `<strong>¡Solicitud recibida con éxito!</strong><br>${data.mensaje}`;
+          feedbackEl.textContent = '';
+          const strongEl = document.createElement('strong');
+          strongEl.textContent = '¡Solicitud recibida con éxito!';
+          feedbackEl.appendChild(strongEl);
+          feedbackEl.appendChild(document.createElement('br'));
+          const msgNode = document.createTextNode(data.mensaje || '');
+          feedbackEl.appendChild(msgNode);
           feedbackEl.style.display = 'block';
         }
         form.reset();
@@ -173,7 +179,12 @@ function initSolicitudApoyo() {
       } else {
         if (feedbackEl) {
           feedbackEl.className = 'humm-alert-box estado-cerrada';
-          feedbackEl.innerHTML = `<strong>Hubo un problema:</strong> ${data.error || 'Revisa los campos.'}`;
+          feedbackEl.textContent = '';
+          const strongEl = document.createElement('strong');
+          strongEl.textContent = 'Hubo un problema: ';
+          feedbackEl.appendChild(strongEl);
+          const errNode = document.createTextNode(data.error || 'Revisa los campos.');
+          feedbackEl.appendChild(errNode);
           feedbackEl.style.display = 'block';
         }
         if (btnSubmit) {

@@ -1,0 +1,8 @@
+{
+  "_comentario": "Plantilla de configuración segura para Humm Fondos (HostGator / Producción)",
+  "DEBUG": "False",
+  "SECRET_KEY": "REEMPLAZAR_CON_CLAVE_CRIPTOGRAFICA_SEGURA_MINIMO_50_CARACTERES",
+  "ALLOWED_HOSTS": "fondos.humm.cl,humm.cl,localhost,127.0.0.1",
+  "DB_PATH": "/home1/paulocis/private/fondos_data/db.sqlite3",
+  "CSRF_TRUSTED_ORIGINS": "https://fondos.humm.cl,https://humm.cl"
+}

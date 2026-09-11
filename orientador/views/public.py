@@ -121,21 +121,53 @@ def procesar_consulta_view(request):
     return render(request, 'orientador/resultados.html', context)
 
 
+import html
+import re
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
 @require_POST
 def solicitar_apoyo_view(request):
     """
     Endpoint para registrar la solicitud voluntaria de apoyo de un emprendedor.
-    Incluye protección contra doble pulsación y deduplicación.
+    Incluye protección contra doble pulsación, deduplicación y validación estricta server-side.
     """
     nombre = request.POST.get('nombre', '').strip()
-    canal = request.POST.get('canal_contacto', 'whatsapp').strip()
+    canal = request.POST.get('canal_contacto', '').strip().lower()
     contacto = request.POST.get('contacto_valor', '').strip()
     mensaje = request.POST.get('mensaje', '').strip()
     autorizacion = request.POST.get('autorizacion_contacto') == 'si'
     adjuntar_perfil = request.POST.get('adjuntar_perfil') == 'si'
 
-    if not nombre or not contacto:
-        return JsonResponse({'ok': False, 'error': 'Debes ingresar tu nombre y dato de contacto.'}, status=400)
+    # Validaciones obligatorias de presencia y longitud
+    if not nombre:
+        return JsonResponse({'ok': False, 'error': 'Debes ingresar tu nombre.'}, status=400)
+    if len(nombre) > 150:
+        return JsonResponse({'ok': False, 'error': 'El nombre no puede exceder los 150 caracteres.'}, status=400)
+
+    if not canal or canal not in ('email', 'whatsapp'):
+        return JsonResponse({'ok': False, 'error': 'Canal de contacto inválido. Opciones permitidas: email o WhatsApp.'}, status=400)
+
+    if not contacto:
+        return JsonResponse({'ok': False, 'error': 'Debes ingresar tu dato de contacto.'}, status=400)
+    if len(contacto) < 3:
+        return JsonResponse({'ok': False, 'error': 'El dato de contacto ingresado es demasiado corto.'}, status=400)
+    if len(contacto) > 150:
+        return JsonResponse({'ok': False, 'error': 'El dato de contacto no puede exceder los 150 caracteres.'}, status=400)
+
+    # Validación específica por formato de canal
+    if canal == 'email':
+        try:
+            validate_email(contacto)
+        except ValidationError:
+            return JsonResponse({'ok': False, 'error': 'El correo electrónico ingresado no tiene un formato válido.'}, status=400)
+    elif canal == 'whatsapp':
+        # Permitir formatos telefónicos estándar (+569..., 9..., espacios, guiones)
+        if not re.match(r'^\+?[\d\s\-\(\)]{6,30}$', contacto):
+            return JsonResponse({'ok': False, 'error': 'El número de WhatsApp no tiene un formato válido.'}, status=400)
+
+    if len(mensaje) > 2000:
+        return JsonResponse({'ok': False, 'error': 'El mensaje no puede superar los 2000 caracteres.'}, status=400)
 
     if not autorizacion:
         return JsonResponse({'ok': False, 'error': 'Debes autorizar a Comunidad Humm para responder tu consulta.'}, status=400)
@@ -170,8 +202,10 @@ def solicitar_apoyo_view(request):
         datos={'canal': canal}
     )
 
+    nombre_limpio = html.escape(nombre)
     return JsonResponse({
         'ok': True,
-        'mensaje': f'Gracias {nombre}, hemos recibido tu solicitud. Te responderemos vía {solicitud.get_canal_contacto_display()}.',
+        'mensaje': f'Gracias {nombre_limpio}, hemos recibido tu solicitud. Te responderemos vía {solicitud.get_canal_contacto_display()}.',
         'id': solicitud.id,
     })
+
